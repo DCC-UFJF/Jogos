@@ -419,7 +419,7 @@ int main()
 
 		// Ajusta a câmera
 		app.setView(camera);
-		camera.setCenter(1000, 300); // Caso o jogador esteja morto, a câmera vai pro meio do mapa
+		//camera.setCenter(1000, 300); // Caso o jogador esteja morto, a câmera vai pro meio do mapa
 
 		// Draw the sprite
 		app.draw(backgroundSprite);
@@ -428,7 +428,12 @@ int main()
 		if (!colidindoDeFrente)
 		{
 			app.draw(playerRect);
-			camera.setCenter(player.xpos,300);
+			if(player.xpos >= (windowWidth*0.35) && player.xpos <= (background.getSize().x - windowWidth * 0.35) )
+                camera.setCenter(player.xpos,300);
+//            else if(player.xpos < windowWidth*0.35)
+//                camera.setCenter(windowWidth*0.35, 300);
+//            else
+//                camera.setCenter(background.getSize().x - windowWidth*0.5, 300);
 		}
 
 		// Só desenha o inimigo se não tiver sido tocado por cima

@@ -41,8 +41,8 @@
 			<Add library="sfml-network" />
 			<Add directory="../SFML-2.5.1/lib" />
 		</Linker>
-		<Unit filename="Animação.cpp" />
-		<Unit filename="Animação.h" />
+		<Unit filename="Animacao.cpp" />
+		<Unit filename="Animacao.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

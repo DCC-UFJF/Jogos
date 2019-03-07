@@ -1,5 +1,10 @@
 #include <SFML/Graphics.hpp>
 
+typedef struct FrameAnimacao
+{
+    float x, y, w, h;
+};
+
 class Animacao
 {
 	public:
@@ -9,6 +14,9 @@ class Animacao
 		void update(int row,float deltaTime, bool faceRight);
 		sf::IntRect uvRect;
 
+		void inicializaSprites();
+		void atualizaSpriteNaTela(bool faceRight);
+
 	private:
 
 		sf::Vector2u imageCount;
@@ -16,4 +24,6 @@ class Animacao
 
 		float totalTime;
 		float switchTime;
+
+		FrameAnimacao spritesheet[9][3];
 };
