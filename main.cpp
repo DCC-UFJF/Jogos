@@ -341,7 +341,7 @@ int main()
 
 	// Parâmetros padrão de texto
 	Font font;
-	font.loadFromFile("data/Caveat-Bold.ttf");
+	font.loadFromFile("Caveat-Bold.ttf");
 	Text text;
 	text.setFont(font);
 
