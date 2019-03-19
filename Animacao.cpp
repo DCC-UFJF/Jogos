@@ -14,23 +14,25 @@ Animacao::Animacao(sf::Texture* texture, sf::Vector2u imageCount, float switchti
 	inicializaSprites();
 }
 
+///exercicio 3 aula 4
 void Animacao::inicializaSprites()
 {
-    int largura = uvRect.width;
-    int altura = uvRect.height;
+	int largura = uvRect.width;
+	int altura = uvRect.height;
 
-    for(int i = 0; i < 9; i++)
-    {
-        for(int j = 0; j < 3; j++)
-        {
-            spritesheet[i][j].x = j * largura;
-            spritesheet[i][j].y = i * altura;
+	for(int i = 0; i < 9; i++)
+	{
+		for(int j = 0; j < 3; j++)
+		{
+			spritesheet[i][j].x = j * largura;
+			spritesheet[i][j].y = i * altura;
 
-            spritesheet[i][j].w = largura;
-            spritesheet[i][j].h = altura;
-        }
-    }
+			spritesheet[i][j].w = largura;
+			spritesheet[i][j].h = altura;
+		}
+	}
 }
+///
 
 void Animacao::update(int row, float deltaTime, bool faceRight)
 {
@@ -39,7 +41,7 @@ void Animacao::update(int row, float deltaTime, bool faceRight)
 
 	if(totalTime >= switchTime)
 	{
-	    // já é tempo de mudar
+		// já é tempo de mudar
 		totalTime -= switchTime;
 		currentImage.x++;
 
@@ -47,7 +49,7 @@ void Animacao::update(int row, float deltaTime, bool faceRight)
 			currentImage.x = 0;
 	}
 
-    atualizaSpriteNaTela(faceRight);
+	atualizaSpriteNaTela(faceRight);
 }
 
 void Animacao::atualizaSpriteNaTela(bool faceRight)
@@ -56,12 +58,12 @@ void Animacao::atualizaSpriteNaTela(bool faceRight)
 
 	if(faceRight)
 	{
-        uvRect.left = spritesheet[currentImage.y][currentImage.x].x;
-        uvRect.width = abs(uvRect.width);
+		uvRect.left = spritesheet[currentImage.y][currentImage.x].x;
+		uvRect.width = abs(uvRect.width);
 	}
 	else
 	{
-        uvRect.left = (spritesheet[currentImage.y][currentImage.x].x + abs(uvRect.width));
-        uvRect.width = -abs(uvRect.width);
+		uvRect.left = (spritesheet[currentImage.y][currentImage.x].x + abs(uvRect.width));
+		uvRect.width = -abs(uvRect.width);
 	}
 }

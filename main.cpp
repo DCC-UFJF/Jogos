@@ -5,9 +5,12 @@
 #include <vector>
 #include "Animacao.h"
 
+#define PALAVRACHAVE "helloworld"
+
 // var
 int windowWidth = 800;
 int windowHeight = 600;
+int chao = 401;
 
 using namespace sf;
 using namespace std;
@@ -23,24 +26,24 @@ typedef struct
 	float xvel = 0;
 	float yvel = 0;
 	float xpos = 300;
-	float ypos = 401; /// personagem começa no chão
+	float ypos = chao;
 }
-playerStruct;
+player;
 
 typedef struct
 {
-	unsigned int row = 0;
+	int fileiraAnimacao = 0;
 	int vivo = 1;
 	bool onGround = true;
 	bool canJump = false;
-	bool faceRight = false;
+	int apontaDireita = 0;
 	float jumpHeight = 0;
 	float xvel = -0.3;
 	float yvel = 0;
 	float xpos = 930;
 	float ypos = 401;
 }
-enemyStruct;
+inimigo;
 
 typedef struct
 {
@@ -51,7 +54,7 @@ typedef struct
 }
 letraStruct;
 
-int getSentido(playerStruct p)
+int getSentido(player p)
 {
 	int sentido;
 	if(Keyboard::isKeyPressed(Keyboard::Right))
@@ -79,8 +82,8 @@ int getSentido(playerStruct p)
 	return sentido;
 }
 
-/// Exercicio 1 primeira aula:
-float movimentoLateral(float aceleracao,playerStruct p)
+/// Aula 1 exercício 1:
+float movimentoLateral(float aceleracao,player p)
 {
 	int direcao;
 	float movimento;
@@ -89,15 +92,15 @@ float movimentoLateral(float aceleracao,playerStruct p)
 	return movimento;
 }
 
-///Exercicio 2 primeira aula:
+/// Aula 1 exercício 2:
 float calculaPulo(float aceleracao,float gravidade,float alturaPulo)
 {
-float resultado;
-resultado = -sqrt(aceleracao * gravidade * alturaPulo);
-return resultado;
+	float resultado;
+	resultado = -sqrt(aceleracao * gravidade * alturaPulo);
+	return resultado;
 }
 
-/// Exercicio Terceira aula
+/// Aula 3 exercício 1:
 int comparar(char* chave, char* teste)
 {
 	int i;
@@ -110,7 +113,27 @@ int comparar(char* chave, char* teste)
 		return 0;
 }
 
-playerStruct playerUpdate(playerStruct p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
+/// Aula 3 exercício 2:
+void atualizaInventario(char palavra[], char lista[], int quant[])
+{
+	lista[0] = '\0'; // essa linha deve ser informada aos calouros
+	int i;
+	for (i = 0; palavra[i] != '\0'; i++)
+	{
+		int j = 0;
+		while (lista[j] != '\0' && lista[j] != palavra[i])
+			j++;
+		if (lista[j] == '\0')
+		{
+			lista[j + 1] = '\0';
+			lista[j] = palavra[i];
+			quant[j] = 0;
+		}
+		quant[j]++;
+	}
+}
+
+player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
 {
 	p.xvel = 0.2;
 	if(p.ypos >= 400)
@@ -160,39 +183,40 @@ playerStruct playerUpdate(playerStruct p,bool playerUp,bool playerLeft,bool play
 
 	return p;
 }
-
-enemyStruct enemyUpdate(enemyStruct p,bool enemyLeft,bool enemyRight,float deltaTime)
+///exercicio 2 aula 4
+inimigo atualizaInimigo (inimigo p,bool enemyLeft,bool enemyRight,float deltaTime)
 {
-	if(p.faceRight || !p.faceRight)
-		p.row = 1;
+	if(p.apontaDireita || !p.apontaDireita)
+		p.fileiraAnimacao = 1;
 
 	if(p.xpos < 0)
 	{
 		p.xvel *= -1;
-		p.faceRight = true;
+		p.apontaDireita = 1;
 	}
 
 	if(p.xpos > 1000)
 	{
 		p.xvel *= -1;
-		p.faceRight = false;
+		p.apontaDireita = 0;
 	}
 
-	p.xpos += p.xvel;
+	p.xpos = p.xpos + p.xvel;
 	return p;
 }
+///
 
-void mataPlayer(playerStruct &p)
+void mataPlayer(player &p)
 {
     p.vivo = 0;
 }
 
-void mataInimigo (enemyStruct &e)
+void mataInimigo (inimigo &e)
 {
     e.vivo = 0;
 }
 
-void quica (playerStruct &p)
+void quica (player &p)
 {
     p.yvel -= 1;
 }
@@ -203,10 +227,10 @@ int main()
 	sf::View camera(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(512.0f,512.0f));
 
 	// Criando as estruturas do player e do inimigo
-	playerStruct player;
+	player player;
 	bool playerUp,playerLeft,playerRight = false;
 	bool limparInventario = false;
-	enemyStruct enemy;
+	inimigo enemy;
 	bool enemyLeft = true;
 	bool enemyRight = false;
 
@@ -216,12 +240,15 @@ int main()
 	// Criando o conteúdo da aula 2
 	int numeroDeLetras = 20;
 	letraStruct letraDados[numeroDeLetras];
-	char* palavraChave = "helloworld"; // adiciona automaticamente '\0'
+	char* palavraChave = (char*) PALAVRACHAVE; // adiciona automaticamente '\0'
 	vector<char> listaDeLetrasAux;
 	char listaDeLetras[numeroDeLetras];
 	int tamanhoPalavraChave = strlen(palavraChave);
 	char palavra[tamanhoPalavraChave];
+	char inventarioLetras[numeroDeLetras];
+	int inventarioLetrasQuant[numeroDeLetras];
 	palavra[0] = '\0';
+	inventarioLetras[0] = '\0';
 	for (int i = 0; i < tamanhoPalavraChave; i++)
 		listaDeLetrasAux.push_back(palavraChave[i]);
 	for (int i = tamanhoPalavraChave; i < numeroDeLetras; i++)
@@ -260,12 +287,14 @@ int main()
 		letra[i].setPosition(letraDados[i].x, letraDados[i].y);
 	}
 
-	vector<RectangleShape> letraInventario;
+	vector<RectangleShape> letraPalavra;
 	vector<RectangleShape> letraResposta;
+	vector<RectangleShape> letraInventario;
 	for (int i = 0; i < tamanhoPalavraChave; i++)
 	{
-		letraInventario.push_back(RectangleShape(Vector2f(20.0f, 20.0f)));
+		letraPalavra.push_back(RectangleShape(Vector2f(20.0f, 20.0f)));
 		letraResposta.push_back(RectangleShape(Vector2f(20.0f, 20.0f)));
+		letraInventario.push_back(RectangleShape(Vector2f(20.0f, 20.0f)));
 	}
 
 	// Criando os sprites
@@ -289,8 +318,10 @@ int main()
 		letra[i].setTexture(&letraTexture);
 	for (int i = 0; i < tamanhoPalavraChave; i++)
 	{
-		letraInventario[i].setTexture(&letraTexture);
+		letraPalavra[i].setTexture(&letraTexture);
 		letraResposta[i].setTexture(&letraSemCorTexture);
+		letraInventario[i].setTexture(&letraTexture);
+		letraInventario[i].setFillColor(Color::Cyan);
 	}
 
 	// Gambiarra da cor:
@@ -308,6 +339,12 @@ int main()
 	for (int i = 0; i < tamanhoPalavraChave; i++)
 		letraResposta[i].setTextureRect(IntRect((palavraChave[i] - 'a') % 6 * 96, (palavraChave[i] - 'a') / 6 * 96, 96, 96));
 
+	// Parâmetros padrão de texto
+	Font font;
+	font.loadFromFile("data/Caveat-Bold.ttf");
+	Text text;
+	text.setFont(font);
+
 	// Inicia o loop do jogo
 	while (app.isOpen())
 	{
@@ -317,7 +354,7 @@ int main()
 		sf::Event event;
 		while (app.pollEvent(event))
 		{
-			// Close window : exit
+			// Close window: exit
 			if (event.type == Event::Closed)
 			{
 				cout << "Closing game" << endl;
@@ -332,7 +369,7 @@ int main()
 
 		// Atualizando o jogador e o inimigo
 		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime);
-		enemy = enemyUpdate(enemy, enemyLeft, enemyRight, deltaTime);
+		enemy = atualizaInimigo(enemy, enemyLeft, enemyRight, deltaTime);
 
 		// Atualizando as letras
 		if (limparInventario)
@@ -340,6 +377,7 @@ int main()
 			palavra[0] = '\0';
 			for (int i = 0; i < numeroDeLetras; i++)
 				letraDados[i].visivel = true;
+			atualizaInventario(palavra, inventarioLetras, inventarioLetrasQuant);
 		}
 
 		// Atualizando a animação do jogador e do inimigo
@@ -348,45 +386,45 @@ int main()
 		playerRect.move(player.xvel,player.yvel);
 
 		enemyRect.setTextureRect(enemyAnimation.uvRect);
-		enemyAnimation.update(enemy.row,deltaTime,enemy.faceRight);
+		enemyAnimation.update(enemy.fileiraAnimacao,deltaTime,enemy.apontaDireita);
 		enemyRect.move(enemy.xvel,enemy.yvel);
 
 		bool colidindoPorCima;
 		bool colidindoDeFrente;
 
-        // Variáveis para a verificação de colisão:
-        float posXPlayer = playerRect.getPosition().x;
-        float posYPlayer = playerRect.getPosition().y;
-        float larguraPlayer = playerRect.getGlobalBounds().width + posXPlayer;
-        float alturaPlayer = playerRect.getGlobalBounds().height + posYPlayer;
-        float velVertical = player.yvel;
-        int pulando = player.onGround;
+	    // Variáveis para a verificação de colisão:
+	    float posXPlayer = playerRect.getPosition().x;
+	    float posYPlayer = playerRect.getPosition().y;
+	    float larguraPlayer = playerRect.getGlobalBounds().width + posXPlayer;
+	    float alturaPlayer = playerRect.getGlobalBounds().height + posYPlayer;
+	    float velVertical = player.yvel;
+	    int pulando = player.onGround;
 
-        float posXInimigo = enemyRect.getPosition().x;
-        float posYInimigo = enemyRect.getPosition().y;
-        float larguraInimigo = enemyRect.getGlobalBounds().width + posXInimigo;
-        float alturaInimigo = enemyRect.getGlobalBounds().height + posYInimigo;
+	    float posXInimigo = enemyRect.getPosition().x;
+	    float posYInimigo = enemyRect.getPosition().y;
+	    float larguraInimigo = enemyRect.getGlobalBounds().width + posXInimigo;
+	    float alturaInimigo = enemyRect.getGlobalBounds().height + posYInimigo;
 
-        float alturaMinima = enemyRect.getGlobalBounds().height;
+	    float alturaMinima = enemyRect.getGlobalBounds().height;
 
 
 		// Só checa colisão se ambos inimigo e jogador ainda estiverem vivos
 		if(enemy.vivo == 1 && player.vivo == 1)
 		{
-                if (posXPlayer < larguraInimigo && larguraPlayer > posXInimigo && posYPlayer < alturaInimigo && alturaPlayer > posYInimigo)
-                {
-                    if (pulando == 0 && posYPlayer >= alturaMinima && velVertical >= 0)
-                    {
-                        colidindoPorCima = 1;
-                        mataInimigo(enemy);
-                        quica(player);
-                    }
-                    else
-                    {
-                        colidindoDeFrente = 1;
-                        mataPlayer(player);
-                    }
-                }
+	            if (posXPlayer < larguraInimigo && larguraPlayer > posXInimigo && posYPlayer < alturaInimigo && alturaPlayer > posYInimigo)
+	            {
+	                if (pulando == 0 && posYPlayer >= alturaMinima && velVertical >= 0)
+	                {
+	                    colidindoPorCima = 1;
+	                    mataInimigo(enemy);
+	                    quica(player);
+	                }
+	                else
+	                {
+	                    colidindoDeFrente = 1;
+	                    mataPlayer(player);
+	                }
+	            }
 		}
 
 		// Colisão entre jogador e letra (se letra estiver visível)
@@ -408,7 +446,8 @@ int main()
 						letraDados[i].visivel = false;
 						palavra[n] = letraDados[i].letra;
 						palavra[n + 1] = '\0';
-						letraInventario[n].setTextureRect(IntRect((letraDados[i].letra - 'a') % 6 * 96, (letraDados[i].letra - 'a') / 6 * 96, 96, 96));
+						letraPalavra[n].setTextureRect(IntRect((letraDados[i].letra - 'a') % 6 * 96, (letraDados[i].letra - 'a') / 6 * 96, 96, 96));
+						atualizaInventario(palavra, inventarioLetras, inventarioLetrasQuant);
 					}
 				}
 			}
@@ -429,7 +468,7 @@ int main()
 		{
 			app.draw(playerRect);
 			if(player.xpos >= (windowWidth*0.35) && player.xpos <= (background.getSize().x - windowWidth * 0.35) )
-                camera.setCenter(player.xpos,300);
+	            camera.setCenter(player.xpos,300);
 //            else if(player.xpos < windowWidth*0.35)
 //                camera.setCenter(windowWidth*0.35, 300);
 //            else
@@ -449,7 +488,7 @@ int main()
 		for (int i = 0; i < tamanhoPalavraChave; i++)
 		{
 			int padx = 20 + camera.getCenter().x - camera.getSize().x / 2;
-			int pady = 50 + camera.getCenter().y - camera.getSize().y / 2;
+			int pady = 20 + camera.getCenter().y - camera.getSize().y / 2;
 			letraResposta[i].setPosition(i * 30 + padx, pady);
 			app.draw(letraResposta[i]);
 		}
@@ -460,19 +499,73 @@ int main()
 		for (int i = 0; i < n; i++)
 		{
 			int padx = 20 + camera.getCenter().x - camera.getSize().x / 2;
-			int pady = 20 + camera.getCenter().y - camera.getSize().y / 2;
-			letraInventario[i].setPosition(i * 30 + padx, pady);
-			if (acertou)
-				letraInventario[i].setFillColor(green);
+			int pady = 50 + camera.getCenter().y - camera.getSize().y / 2;
+			letraPalavra[i].setPosition(i * 30 + padx, pady);
+			if (acertou){
+				letraPalavra[i].setFillColor(green);
+				text.setFillColor(Color::Green);
+			    text.setCharacterSize(72);
+			    text.setString("Você conseguiu!");
+			    int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+			    int y = camera.getCenter().y - text.getLocalBounds().height / 2;
+			    text.setPosition(x, y - 72);
+			    app.draw(text);
+			    text.setCharacterSize(36);
+			    text.setString("Pressione ALT+F4 para sair");
+			    x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+			    y = camera.getCenter().y - text.getLocalBounds().height / 2;
+			    text.setPosition(x, y);
+			    app.draw(text);
+		}
 			else
-				letraInventario[i].setFillColor(salmon);
+				letraPalavra[i].setFillColor(salmon);
+			app.draw(letraPalavra[i]);
+		}
+
+		// Atualiza o inventário
+		n = strlen(inventarioLetras);
+		for (int i = 0; i < n; i++)
+		{
+			letraInventario[i].setTexture(&letraSemCorTexture);
+			letraInventario[i].setTextureRect(IntRect((inventarioLetras[i] - 'a') % 6 * 96, (inventarioLetras[i] - 'a') / 6 * 96, 96, 96));
+		}
+
+		// Desenha as letras que o jogador pegou em ordem e a quantidade delas
+		for (int i = 0; i < n; i++)
+		{
+			int padx = 20 + camera.getCenter().x - camera.getSize().x / 2;
+			int pady = 80 + camera.getCenter().y - camera.getSize().y / 2;
+			letraInventario[i].setPosition(i * 30 + padx, pady);
 			app.draw(letraInventario[i]);
+			text.setFillColor(Color::Black);
+			text.setCharacterSize(18);
+			text.setString(to_string(inventarioLetrasQuant[i]));
+			text.setPosition(i * 30 + padx + 9, pady + 5);
+			app.draw(text);
+		}
+
+		// Game over
+		if (!player.vivo)
+		{
+			text.setFillColor(Color::Red);
+			text.setCharacterSize(72);
+			text.setString("Fim do jogo!");
+			int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+			int y = camera.getCenter().y - text.getLocalBounds().height / 2;
+			text.setPosition(x, y - 72);
+			app.draw(text);
+			text.setCharacterSize(36);
+			text.setString("Pressione ALT+F4 para sair");
+			x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+			y = camera.getCenter().y - text.getLocalBounds().height / 2;
+			text.setPosition(x, y);
+			app.draw(text);
 		}
 
 		// Update the window
 		app.display();
 
 	}
-
 	return EXIT_SUCCESS;
 }
+

@@ -1,9 +1,10 @@
 #include <SFML/Graphics.hpp>
 
-typedef struct FrameAnimacao
+typedef struct
 {
-    float x, y, w, h;
-};
+	float x, y, w, h;
+}
+FrameAnimacao;
 
 class Animacao
 {
