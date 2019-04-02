@@ -83,13 +83,13 @@ int getSentido(player p)
 }
 
 /// Aula 1 exercício 1:
-float movimentoLateral(float aceleracao,player p)
+float movimentoLateral(float aceleracao,player p,float dt)
 {
 	int direcao;
 	float movimento;
 	direcao = getSentido(p);
-	movimento = (aceleracao * direcao);
-	return movimento;
+	movimento = (aceleracao * direcao) * dt;
+    return movimento;
 }
 
 /// Aula 1 exercício 2:
@@ -133,7 +133,7 @@ void atualizaInventario(char palavra[], char lista[], int quant[])
 	}
 }
 
-player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
+player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime,float fps)
 {
 	p.xvel = 0.2;
 	if(p.ypos >= 400)
@@ -160,7 +160,7 @@ player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,floa
 	{
 		p.onGround = false;
 		p.canJump = false;
-		p.yvel = calculaPulo(0.01,0.1,p.jumpHeight);
+		p.yvel = calculaPulo(0.01,0.2,p.jumpHeight);
 		//p.yvel = -sqrt(0.01 * 0.1f * p.jumpHeight);
 		p.row = 2;
 	}
@@ -177,10 +177,9 @@ player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,floa
 	else
 		p.yvel += 1.0f * deltaTime;
 
-	p.xvel = movimentoLateral(p.xvel,p);
+	p.xvel = movimentoLateral(p.xvel,p,fps);
 	p.xpos += p.xvel;
 	p.ypos += p.yvel;
-
 	return p;
 }
 ///exercicio 2 aula 4
@@ -218,7 +217,7 @@ void mataInimigo (inimigo &e)
 
 void quica (player &p)
 {
-    p.yvel -= 1;
+    p.yvel -= 1.2;
 }
 
 int main()
@@ -268,7 +267,7 @@ int main()
 		letraDados[i].x = 50 + i * 80;
 	}
 
-	// Gambiarra pra mudar a cor do inimigo
+	// Mudar a cor do inimigo
 	sf::Color salmon(255, 128, 128);
 	sf::Color green(66, 244, 125);
 
@@ -324,14 +323,16 @@ int main()
 		letraInventario[i].setFillColor(Color::Cyan);
 	}
 
-	// Gambiarra da cor:
+	// Cor do inimigo
 	enemyRect.setFillColor(salmon);
 
 	// Define as animações
 	Animacao playerAnimation(&playerTexture,Vector2u(3,9),0.3f);
 	Animacao enemyAnimation(&enemyTexture,Vector2u(3,9),0.3f);
 	float deltaTime = 0.0f;
+	float fps = 0.0f;
 	Clock relogio;
+	Clock relogioFps;
 
 	// Define o retângulo da textura da letra
 	for (int i = 0; i < numeroDeLetras; i++)
@@ -341,7 +342,7 @@ int main()
 
 	// Parâmetros padrão de texto
 	Font font;
-	font.loadFromFile("Caveat-Bold.ttf");
+	font.loadFromFile("data/Caveat-Bold.ttf");
 	Text text;
 	text.setFont(font);
 
@@ -350,6 +351,7 @@ int main()
 	{
 		// Process events
 		deltaTime = relogio.restart().asSeconds();
+		fps = relogioFps.restart().asMilliseconds();
 
 		sf::Event event;
 		while (app.pollEvent(event))
@@ -368,7 +370,7 @@ int main()
 		limparInventario = Keyboard::isKeyPressed(Keyboard::Q);
 
 		// Atualizando o jogador e o inimigo
-		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime);
+		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime,fps);
 		enemy = atualizaInimigo(enemy, enemyLeft, enemyRight, deltaTime);
 
 		// Atualizando as letras
