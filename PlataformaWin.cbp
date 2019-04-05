@@ -30,16 +30,15 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c++0x" />
 			<Add option="-Wall" />
-			<Add directory="../SFML-2.5.1/include" />
+			<Add directory="include" />
 		</Compiler>
 		<Linker>
 			<Add library="sfml-graphics" />
 			<Add library="sfml-window" />
 			<Add library="sfml-system" />
-			<Add library="sfml-audio" />
-			<Add library="sfml-network" />
-			<Add directory="../SFML-2.5.1/lib" />
+			<Add directory="lib" />
 		</Linker>
 		<Unit filename="Animacao.cpp" />
 		<Unit filename="Animacao.h" />

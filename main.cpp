@@ -28,7 +28,7 @@ typedef struct
 	float xpos = 300;
 	float ypos = chao;
 }
-player;
+Player;
 
 typedef struct
 {
@@ -38,7 +38,7 @@ typedef struct
 	bool canJump = false;
 	int apontaDireita = 0;
 	float jumpHeight = 0;
-	float xvel = -0.3;
+	float xvel = -3;
 	float yvel = 0;
 	float xpos = 930;
 	float ypos = 401;
@@ -54,7 +54,7 @@ typedef struct
 }
 letraStruct;
 
-int getSentido(player p)
+int getSentido(Player p)
 {
 	int sentido;
 	if(Keyboard::isKeyPressed(Keyboard::Right))
@@ -63,7 +63,7 @@ int getSentido(player p)
 		if(p.xpos >= 1960) // atingiu a borda direita
 		{
 			if(!p.onGround)
-				p.xvel = -0.1;
+				p.xvel = -2;
 			sentido = 0;
 		}
 	}
@@ -73,7 +73,7 @@ int getSentido(player p)
 		if(p.xpos <= 0) // atingiu a borda esquerda
 		{
 			if(!p.onGround)
-				p.xvel = 0.1;
+				p.xvel = 2;
 			sentido = 0;
 		}
 	}
@@ -83,21 +83,24 @@ int getSentido(player p)
 }
 
 /// Aula 1 exercício 1:
-float movimentoLateral(float aceleracao,player p,float dt)
+float movimentoLateral(float aceleracao,Player p)
 {
 	int direcao;
 	float movimento;
 	direcao = getSentido(p);
-	movimento = (aceleracao * direcao) * dt;
+	movimento = (aceleracao * direcao);
     return movimento;
 }
 
 /// Aula 1 exercício 2:
-float calculaPulo(float aceleracao,float gravidade,float alturaPulo)
+float calculaVelocidadePulo(float v0, float impulso, float gravidade, float delta_t)
 {
-	float resultado;
-	resultado = -sqrt(aceleracao * gravidade * alturaPulo);
-	return resultado;
+	return v0 + (impulso + gravidade) * delta_t;
+}
+
+float calculaPosicaoPulo(float y0, float v, float delta_t)
+{
+    return y0 + v * delta_t;
 }
 
 /// Aula 3 exercício 1:
@@ -133,17 +136,11 @@ void atualizaInventario(char palavra[], char lista[], int quant[])
 	}
 }
 
-player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime,float fps)
+Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
 {
-	p.xvel = 0.2;
-	if(p.ypos >= 400)
-	{
-		p.onGround = true;
-		p.canJump = true;
-	}
-	else
-		p.onGround = false;
-
+    float impulso = 0;
+    float gravidade = 700;
+	p.xvel = 2;
 	if(playerRight)
 	{
 		p.faceRight = true;
@@ -156,12 +153,14 @@ player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 1;
 	}
 
+    float v0 = p.yvel;
 	if((playerUp) && (p.canJump))
 	{
 		p.onGround = false;
 		p.canJump = false;
-		p.yvel = calculaPulo(0.01,0.2,p.jumpHeight);
-		//p.yvel = -sqrt(0.01 * 0.1f * p.jumpHeight);
+		//p.yvel = calculaPulo(0.1,2,p.jumpHeight);
+		impulso = -20000;
+		//p.yvel += impulso * deltaTime;
 		p.row = 2;
 	}
 
@@ -170,16 +169,33 @@ player playerUpdate(player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 0;
 	}
 
+	//if(p.onGround)
+	//{
+		//p.yvel = 0;
+	//}
+	//else
+		//p.yvel += 10.0f * deltaTime;
+		//p.yvel += gravidade * deltaTime;
+
+	p.xvel = movimentoLateral(p.xvel,p);
+	p.xpos += p.xvel;
+	p.yvel = calculaVelocidadePulo(p.yvel, impulso, gravidade, deltaTime);
+	p.ypos = calculaPosicaoPulo(p.ypos, p.yvel, deltaTime);
+	//p.ypos += p.yvel;
+
+	 if(p.ypos >= 400)
+	{
+		p.onGround = true;
+		p.canJump = true;
+		p.ypos = 400;
+	}
+	else
+		p.onGround = false;
+
 	if(p.onGround)
 	{
 		p.yvel = 0;
 	}
-	else
-		p.yvel += 1.0f * deltaTime;
-
-	p.xvel = movimentoLateral(p.xvel,p,fps);
-	p.xpos += p.xvel;
-	p.ypos += p.yvel;
 	return p;
 }
 ///exercicio 2 aula 4
@@ -205,7 +221,7 @@ inimigo atualizaInimigo (inimigo p,bool enemyLeft,bool enemyRight,float deltaTim
 }
 ///
 
-void mataPlayer(player &p)
+void mataPlayer(Player &p)
 {
     p.vivo = 0;
 }
@@ -215,9 +231,9 @@ void mataInimigo (inimigo &e)
     e.vivo = 0;
 }
 
-void quica (player &p)
+void quica (Player &p)
 {
-    p.yvel -= 1.2;
+    p.yvel -= 500;
 }
 
 int main()
@@ -226,7 +242,7 @@ int main()
 	sf::View camera(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(512.0f,512.0f));
 
 	// Criando as estruturas do player e do inimigo
-	player player;
+	Player player;
 	bool playerUp,playerLeft,playerRight = false;
 	bool limparInventario = false;
 	inimigo enemy;
@@ -330,9 +346,7 @@ int main()
 	Animacao playerAnimation(&playerTexture,Vector2u(3,9),0.3f);
 	Animacao enemyAnimation(&enemyTexture,Vector2u(3,9),0.3f);
 	float deltaTime = 0.0f;
-	float fps = 0.0f;
 	Clock relogio;
-	Clock relogioFps;
 
 	// Define o retângulo da textura da letra
 	for (int i = 0; i < numeroDeLetras; i++)
@@ -342,7 +356,7 @@ int main()
 
 	// Parâmetros padrão de texto
 	Font font;
-	font.loadFromFile("data/Caveat-Bold.ttf");
+	font.loadFromFile("Caveat-Bold.ttf");
 	Text text;
 	text.setFont(font);
 
@@ -350,8 +364,8 @@ int main()
 	while (app.isOpen())
 	{
 		// Process events
+		app.setFramerateLimit(60);
 		deltaTime = relogio.restart().asSeconds();
-		fps = relogioFps.restart().asMilliseconds();
 
 		sf::Event event;
 		while (app.pollEvent(event))
@@ -370,7 +384,7 @@ int main()
 		limparInventario = Keyboard::isKeyPressed(Keyboard::Q);
 
 		// Atualizando o jogador e o inimigo
-		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime,fps);
+		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime);
 		enemy = atualizaInimigo(enemy, enemyLeft, enemyRight, deltaTime);
 
 		// Atualizando as letras
@@ -385,7 +399,9 @@ int main()
 		// Atualizando a animação do jogador e do inimigo
 		playerRect.setTextureRect(playerAnimation.uvRect);
 		playerAnimation.update(player.row,deltaTime,player.faceRight);
-		playerRect.move(player.xvel,player.yvel);
+		//playerRect.move(player.xvel,player.yvel);
+		playerRect.setPosition(player.xpos,player.ypos);
+
 
 		enemyRect.setTextureRect(enemyAnimation.uvRect);
 		enemyAnimation.update(enemy.fileiraAnimacao,deltaTime,enemy.apontaDireita);
