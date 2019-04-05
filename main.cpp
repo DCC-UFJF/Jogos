@@ -153,7 +153,7 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 1;
 	}
 
-    float v0 = p.yvel;
+    //float v0 = p.yvel;
 	if((playerUp) && (p.canJump))
 	{
 		p.onGround = false;
