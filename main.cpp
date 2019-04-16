@@ -1,11 +1,10 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include "Animacao.h"
-
-#define PALAVRACHAVE "helloworld"
 
 // var
 int windowWidth = 800;
@@ -47,6 +46,16 @@ typedef struct
 }
 inimigo;
 
+typedef struct
+{
+	float x;
+	float y;
+	float w;
+	float h;
+	RectangleShape rectShape;
+}
+plataforma;
+
 int apertouEsq()
 {
 if(Keyboard::isKeyPressed(Keyboard::Left))
@@ -65,7 +74,7 @@ if(Keyboard::isKeyPressed(Keyboard::Right))
 else return 1;
 }
 
-///Exercicio colisão de borda
+/// Exercicio colisão de borda
 int colisaoBorda(int posicaoPlayer)
 {
     int colidindo = 0;
@@ -78,6 +87,40 @@ int colisaoBorda(int posicaoPlayer)
         colidindo = apertouDir();
     }
     return colidindo;
+}
+
+/// Exercício colisão plataforma parte 1
+int colisaoPlataforma(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
+{
+	// x1 é o lado esquerdo e x2 o direito. y1 é o lado de cima e y2 o de baixo
+	int x = 0, y = 0;
+	x = (player_x1 >= plat_x1 && player_x1 <= plat_x2) ? 1 : x;
+	x = (player_x2 >= plat_x1 && player_x2 <= plat_x2) ? 1 : x;
+	y = (player_y1 >= plat_y1 && player_y1 <= plat_y2) ? 1 : y;
+	y = (player_y2 >= plat_y1 && player_y2 <= plat_y2) ? 1 : y;
+
+	// Para configurar uma colisão precisa colidir em x e em y
+	return (x && y);
+}
+
+/// Exercício colisão plataforma parte 2
+char sentidoColisao(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
+{
+	// Calcula qual o lado (esquerda, direita, cima, baixo) mais próximo do jogador
+	// As letras l, r, u, d, e significam respectivamente left, right, up, down, error
+	float l = abs(player_x2 - plat_x1);
+	float r = abs(player_x1 - plat_x2);
+	float u = abs(player_y2 - plat_y1);
+	float d = abs(player_y1 - plat_y2);
+	if (l < r && l < u && l < d)
+		return 'l';
+	if (r < l && r < u && r < d)
+		return 'r';
+	if (u < l && u < r && u < d)
+		return 'u';
+	if (d < l && d < r && d < u)
+		return 'd';
+	return 'e';
 }
 
 int getSentido(Player p)
@@ -131,7 +174,7 @@ float calculaPosicaoPulo(float y0, float v, float delta_t)
     return y0 + v * delta_t;
 }
 
-Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
+Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime, vector<plataforma> plat)
 {
     float impulso = 0;
     float gravidade = 700;
@@ -161,6 +204,7 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
         p.row = 0;
     }
 
+	float aux = p.ypos;
     p.xvel = movimentoLateral(p.xvel,p);
     p.xpos += p.xvel;
     p.yvel = calculaVelocidadePulo(p.yvel, impulso, gravidade, deltaTime);
@@ -174,6 +218,28 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
     }
     else
         p.onGround = false;
+
+	// Colisão com as plataformas
+	float w = 50;
+	float h = 50;
+	for (int i = 0; i < plat.size(); i++)
+	{
+		if (colisaoPlataforma(p.xpos, p.ypos, p.xpos + w, p.ypos + h, plat[i].x, plat[i].y, plat[i].w + plat[i].x, plat[i].h + plat[i].y))
+		{
+			char c = sentidoColisao(p.xpos, p.ypos, p.xpos + w, p.ypos + h, plat[i].x, plat[i].y, plat[i].w + plat[i].x, plat[i].h + plat[i].y);
+			if ((c == 'l' && p.xvel > 0) || (c == 'r' && p.xvel < 0))
+				p.xpos -= p.xvel;
+			else if (!(c == 'd' && p.yvel > 0))
+			{
+				p.ypos = aux;
+				if (c == 'u' && p.yvel > 0)
+				{
+					p.onGround = true;
+					p.canJump = true;
+				}
+			}
+		}
+	}
 
     if(p.onGround)
     {
@@ -228,6 +294,29 @@ int main()
     bool colidindoPorCima = false;
     bool colidindoDeFrente = false;
 
+	// Criando as plataformas
+	vector<plataforma> plataformas;
+	ifstream file("data/plataformas.txt");
+	if (file.is_open())
+	{
+		// O arquivo txt com os dados das plataformas é escrito da seguinte forma
+		// Primeira linha: número inteiro de plataformas que existem
+		// Linhas seguintes: quatro números separados por espaços que indicam respectivamente x, y, w (largura) e h (altura)
+		int n;
+		file >> n;
+		for (int i = 0; i < n; i++)
+		{
+			plataforma p;
+			file >> p.x;
+			file >> p.y;
+			file >> p.w;
+			file >> p.h;
+			p.rectShape.setPosition(p.x, p.y);
+			p.rectShape.setSize(Vector2f(p.w, p.h));
+			plataformas.push_back(p);
+		}
+	}
+
     // Mudar a cor do inimigo
     sf::Color salmon(255, 128, 128);
     sf::Color green(66, 244, 125);
@@ -235,24 +324,28 @@ int main()
     RenderWindow app(VideoMode(windowWidth, windowHeight), "Plataforma");
 
     RectangleShape playerRect(Vector2f(50.0f,50.0f));
-    playerRect.setPosition(player.xpos,player.ypos);
+    playerRect.setPosition(player.xpos, player.ypos);
 
     RectangleShape enemyRect(Vector2f(50.0f,50.0f));
-    enemyRect.setPosition(enemy.xpos,enemy.ypos);
+    enemyRect.setPosition(enemy.xpos, enemy.ypos);
 
     // Criando os sprites
     Texture background;
     Texture playerTexture;
     Texture enemyTexture;
+	Texture platformTexture;
 
     background.loadFromFile("data/images/background.jpg");
     playerTexture.loadFromFile("data/images/Tux.png");
     enemyTexture.loadFromFile("data/images/Tux.png");
+	platformTexture.loadFromFile("data/images/gelo.png");
 
     Sprite backgroundSprite (background);
 
     playerRect.setTexture(&playerTexture);
     enemyRect.setTexture(&enemyTexture);
+	for (int i = 0; i < plataformas.size(); i++)
+		plataformas[i].rectShape.setTexture(&platformTexture);
 
     // Cor do inimigo
     enemyRect.setFillColor(salmon);
@@ -292,7 +385,7 @@ int main()
         playerUp = (Keyboard::isKeyPressed(Keyboard::Up));
 
         // Atualizando o jogador e o inimigo
-        player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime);
+        player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime, plataformas);
         enemy = atualizaInimigo(enemy);
 
         // Atualizando a animação do jogador e do inimigo
@@ -350,6 +443,10 @@ int main()
 
         // Draw the sprite
         app.draw(backgroundSprite);
+
+		// Desenha as plataformas
+		for (int i = 0; i < plataformas.size(); i++)
+			app.draw(plataformas[i].rectShape);
 
         // Só desenha o player se não tiver sido tocado de frente
         if (!colidindoDeFrente)
