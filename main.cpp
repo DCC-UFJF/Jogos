@@ -80,27 +80,81 @@ int apertouZ()
         return 0;
 }
 
-/// EXERCÍCIO 1: Colisão com as bordas da tela
+/// Exercicio colisão de borda
 int colisaoBorda(int posicaoPlayer)
 {
-    /// INCLUA SEU CÓDIGO AQUI (mude o retorno se necessário)
-    return 0;
+    int colidindo = 0;
+    if(posicaoPlayer >= bordaDir && apertouDir())
+    {
+        colidindo = 1;
+    }
+    if(posicaoPlayer <= bordaEsq && apertouEsq())
+    {
+        colidindo = 1;
+    }
+    return colidindo;
 }
 
-/// EXERCÍCIO 2: Colisão com objetos: Parte 1
+/// Exercício colisão com objetos parte 1
 int colidiu(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
 {
-    /// INCLUA SEU CÓDIGO AQUI (mude o retorno se necessário)
-	return 0;
+	// x1 é o lado esquerdo e x2 o direito. y1 é o lado de cima e y2 o de baixo
+//	int x = 0, y = 0;
+//	x = (player_x1 >= plat_x1 && player_x1 <= plat_x2) ? 1 : x;
+//	x = (player_x2 >= plat_x1 && player_x2 <= plat_x2) ? 1 : x;
+//	y = (player_y1 >= plat_y1 && player_y1 <= plat_y2) ? 1 : y;
+//	y = (player_y2 >= plat_y1 && player_y2 <= plat_y2) ? 1 : y;
+//
+//	// Para configurar uma colisão precisa colidir em x e em y
+//	return (x && y);
+
+    float player_dx = player_x2 - player_x1;
+    float player_dy = player_y2 - player_y1;
+    float plat_dx = plat_x2 - plat_x1;
+    float plat_dy = plat_y2 - plat_y1;
+
+    float player_cx = player_x1 + player_dx * 0.5f;
+    float player_cy = player_y1 + player_dy * 0.5f;
+    float plat_cx = plat_x1 + plat_dx * 0.5f;
+    float plat_cy = plat_y1 + plat_dy * 0.5f;
+
+//    cout << "player: (" << player_cx << ", " << player_cy << ", " << player_dx << ", " << player_dy << ")" << endl;
+//    cout << "platform: (" << plat_cx << ", " << plat_cy << ", " << plat_dx << ", " << plat_dy << ")" << endl;
+
+    if(fabs(plat_cx - player_cx) <= (player_dx + plat_dx)*0.5f &&
+      (fabs(plat_cy - player_cy) <= (player_dy + plat_dy)*0.5f))
+        return true;
+    else
+        return false;
 }
 
-/// EXERCÍCIO 3: Colisão com objetos: Parte 2
+/// Exercício colisão com objetos parte 2
 char sentidoColisao(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
 {
 	// Calcula qual o lado (esquerda, direita, cima, baixo) mais próximo do jogador
 	// As letras l, r, u, d, e significam respectivamente left, right, up, down, error
-	/// INCLUA SEU CÓDIGO AQUI (mude o retorno se necessário)
+	float l = fabs(player_x2 - plat_x1);
+	float r = fabs(player_x1 - plat_x2);
+	float u = fabs(player_y2 - plat_y1);
+	float d = fabs(player_y1 - plat_y2);
+	if (l < r && l < u && l < d)
+		return 'l';
+	if (r < l && r < u && r < d)
+		return 'r';
+	if (u < l && u < r && u < d)
+		return 'u';
+	if (d < l && d < r && d < u)
+		return 'd';
 	return 'e';
+//    if(player_x2 >= plat_x1 && player_x1 < plat_x2)
+//        return 'l';
+//    else if(player_x1 <= plat_x2 && player_x2 > plat_x1)
+//        return 'r';
+//    else if(player_y2 >= plat_y1 && player_y1 < plat_y2)
+//        return 'u';
+//    else if(player_y1 <= plat_y2 && player_y2 > plat_y1)
+//        return 'd';
+//    else return 'e';
 }
 
 int getSentido(Player p)
@@ -217,6 +271,15 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
             }
             if(c == 'd')
                 p.ypos = aux;
+//			else if (!(c == 'd' && p.yvel > 0))
+//			{
+//				p.ypos = aux;
+//				if (c == 'u')
+//				{
+//					p.onGround = true;
+//					p.canJump = true;
+//				}
+//			}
 		}
 	}
 
@@ -227,7 +290,7 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
     return p;
 }
 
-/// EXERCÍCIO 4: Movimentar inimigo em um padrão fixo
+/// Exercicio de movimentar inimigo esquerda-direita
 inimigo moveInimigo(inimigo i)
 {
     float xpos, xvel, apontaDireita;
@@ -235,11 +298,20 @@ inimigo moveInimigo(inimigo i)
     xvel = i.xvel;
     apontaDireita = i.apontaDireita;
 
-    /// COLOQUE SEU CÓDIGO ABAIXO (não alterar as linhas já implementadas)
+    /// COLOQUE SEU CÓDIGO AQUI
+    if(xpos < bordaEsq)
+    {
+        xvel *= -1;
+        apontaDireita = 1;
+    }
 
+    if(xpos > 1000)
+    {
+        xvel *= -1;
+        apontaDireita = 0;
+    }
 
-
-    /// COLOQUE SEU CÓDIGO ACIMA (não alterar as linhas já implementadas)
+    xpos = xpos + xvel;
 
     i.xpos = xpos;
     i.xvel = xvel;
@@ -248,7 +320,7 @@ inimigo moveInimigo(inimigo i)
     return i;
 }
 
-/// EXERCÍCIO 5: Fazer o inimigo perseguir o jogador
+/// Exercicio de movimentar inimigo perseguindo o jogador
 inimigo moveInimigo(inimigo i, Player p)
 {
     float ix, ivel, apontaDireita, px, pvel;
@@ -258,12 +330,14 @@ inimigo moveInimigo(inimigo i, Player p)
     px = p.xpos;
     pvel = p.xvel;
 
-    /// COLOQUE SEU CÓDIGO ABAIXO (não alterar as linhas já implementadas)
+    /// COLOQUE SEU CÓDIGO AQUI
+    if((px - ix)*ivel < 0 && fabs(px - ix) > 100)
+    {
+        apontaDireita = !apontaDireita;
+        ivel *= -1;
+    }
 
-
-
-    /// COLOQUE SEU CÓDIGO ACIMA (não alterar as linhas já implementadas)
-
+    ix = ix + ivel;
     i.xpos = ix;
     i.xvel = ivel;
     i.apontaDireita = apontaDireita;
@@ -419,16 +493,23 @@ int main()
 
 
         // Só checa colisão se ambos inimigo e jogador ainda estiverem vivos
+        ///exercicio colisão entre inimigo e player
         if(enemy.vivo == 1 && player.vivo == 1)
         {
-            /// EXERCÍCIO 6: Tratar colisão entre inimigo e jogador
-
-            /// COLOQUE SEU CÓDIGO ABAIXO
-
-
-
-
-            /// COLOQUE SEU CÓDIGO ACIMA
+            if(colidiu(playerX1, playerY1, playerX2, playerY2, inimigoX1, inimigoY1, inimigoX2, inimigoY2))
+            {
+                if (pulando == 0 && playerY1 >= alturaMinima && velVertical >= 0)
+                {
+                    //colidindoPorCima = 1;
+                    mataInimigo(enemy);
+                    quica(player);
+                }
+                else
+                {
+                    //colidindoDeFrente = 1;
+                    mataPlayer(player);
+                }
+            }
         }
 
         // Clear screen
