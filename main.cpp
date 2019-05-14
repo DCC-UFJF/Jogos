@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <vector>
 #include "Animacao.h"
@@ -11,6 +12,8 @@
 int windowWidth = 800;
 int windowHeight = 600;
 int chao = 401;
+int bordaEsq = 0;
+int bordaDir = 1940;
 
 using namespace sf;
 using namespace std;
@@ -47,6 +50,16 @@ inimigo;
 
 typedef struct
 {
+	float x;
+	float y;
+	float w;
+	float h;
+	RectangleShape rectShape;
+}
+plataforma;
+
+typedef struct
+{
 	bool visivel = true;
 	char letra = 'a';
 	float x = 150;
@@ -54,13 +67,116 @@ typedef struct
 }
 letraStruct;
 
+int apertouEsq()
+{
+    if(Keyboard::isKeyPressed(Keyboard::Left))
+        return 1;
+    else
+        return 0;
+}
+
+int apertouDir()
+{
+    if(Keyboard::isKeyPressed(Keyboard::Right))
+        return 1;
+    else
+        return 0;
+}
+
+int apertouZ()
+{
+    if(Keyboard::isKeyPressed(Keyboard::Z))
+        return 1;
+    else
+        return 0;
+}
+
+/// Exercicio colisão de borda
+int colisaoBorda(int posicaoPlayer)
+{
+    int colidindo = 0;
+    if(posicaoPlayer >= bordaDir && apertouDir())
+    {
+        colidindo = 1;
+    }
+    if(posicaoPlayer <= bordaEsq && apertouEsq())
+    {
+        colidindo = 1;
+    }
+    return colidindo;
+}
+
+/// Exercício colisão com objetos parte 1
+int colidiu(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
+{
+	// x1 é o lado esquerdo e x2 o direito. y1 é o lado de cima e y2 o de baixo
+//	int x = 0, y = 0;
+//	x = (player_x1 >= plat_x1 && player_x1 <= plat_x2) ? 1 : x;
+//	x = (player_x2 >= plat_x1 && player_x2 <= plat_x2) ? 1 : x;
+//	y = (player_y1 >= plat_y1 && player_y1 <= plat_y2) ? 1 : y;
+//	y = (player_y2 >= plat_y1 && player_y2 <= plat_y2) ? 1 : y;
+//
+//	// Para configurar uma colisão precisa colidir em x e em y
+//	return (x && y);
+
+    float player_dx = player_x2 - player_x1;
+    float player_dy = player_y2 - player_y1;
+    float plat_dx = plat_x2 - plat_x1;
+    float plat_dy = plat_y2 - plat_y1;
+
+    float player_cx = player_x1 + player_dx * 0.5f;
+    float player_cy = player_y1 + player_dy * 0.5f;
+    float plat_cx = plat_x1 + plat_dx * 0.5f;
+    float plat_cy = plat_y1 + plat_dy * 0.5f;
+
+//    cout << "player: (" << player_cx << ", " << player_cy << ", " << player_dx << ", " << player_dy << ")" << endl;
+//    cout << "platform: (" << plat_cx << ", " << plat_cy << ", " << plat_dx << ", " << plat_dy << ")" << endl;
+
+    if(fabs(plat_cx - player_cx) <= (player_dx + plat_dx)*0.5f &&
+      (fabs(plat_cy - player_cy) <= (player_dy + plat_dy)*0.5f))
+        return true;
+    else
+        return false;
+}
+
+/// Exercício colisão com objetos parte 2
+char sentidoColisao(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
+{
+	// Calcula qual o lado (esquerda, direita, cima, baixo) mais próximo do jogador
+	// As letras l, r, u, d, e significam respectivamente left, right, up, down, error
+	float l = fabs(player_x2 - plat_x1);
+	float r = fabs(player_x1 - plat_x2);
+	float u = fabs(player_y2 - plat_y1);
+	float d = fabs(player_y1 - plat_y2);
+	if (l < r && l < u && l < d)
+		return 'l';
+	if (r < l && r < u && r < d)
+		return 'r';
+	if (u < l && u < r && u < d)
+		return 'u';
+	if (d < l && d < r && d < u)
+		return 'd';
+	return 'e';
+//    if(player_x2 >= plat_x1 && player_x1 < plat_x2)
+//        return 'l';
+//    else if(player_x1 <= plat_x2 && player_x2 > plat_x1)
+//        return 'r';
+//    else if(player_y2 >= plat_y1 && player_y1 < plat_y2)
+//        return 'u';
+//    else if(player_y1 <= plat_y2 && player_y2 > plat_y1)
+//        return 'd';
+//    else return 'e';
+}
+
 int getSentido(Player p)
 {
 	int sentido;
+	bool colidindo;
 	if(Keyboard::isKeyPressed(Keyboard::Right))
 	{
 		sentido = 1;
-		if(p.xpos >= 1960) // atingiu a borda direita
+		colidindo = colisaoBorda(p.xpos);
+		if(colidindo == true) // atingiu a borda direita
 		{
 			if(!p.onGround)
 				p.xvel = -2;
@@ -70,7 +186,8 @@ int getSentido(Player p)
 	else if(Keyboard::isKeyPressed(Keyboard::Left))
 	{
 		sentido = -1;
-		if(p.xpos <= 0) // atingiu a borda esquerda
+		colidindo = colisaoBorda(p.xpos);
+		if(colidindo == true) // atingiu a borda esquerda
 		{
 			if(!p.onGround)
 				p.xvel = 2;
@@ -82,7 +199,6 @@ int getSentido(Player p)
 	return sentido;
 }
 
-/// Aula 1 exercício 1:
 float movimentoLateral(float aceleracao,Player p)
 {
 	int direcao;
@@ -92,7 +208,6 @@ float movimentoLateral(float aceleracao,Player p)
     return movimento;
 }
 
-/// Aula 1 exercício 2:
 float calculaVelocidadePulo(float v0, float impulso, float gravidade, float delta_t)
 {
 	return v0 + (impulso + gravidade) * delta_t;
@@ -136,11 +251,11 @@ void atualizaInventario(char palavra[], char lista[], int quant[])
 	}
 }
 
-Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
+Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime, vector<plataforma> plat)
 {
     float impulso = 0;
     float gravidade = 700;
-	p.xvel = 2;
+	p.xvel = 5;
 	if(playerRight)
 	{
 		p.faceRight = true;
@@ -153,14 +268,11 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 1;
 	}
 
-    //float v0 = p.yvel;
 	if((playerUp) && (p.canJump))
 	{
 		p.onGround = false;
 		p.canJump = false;
-		//p.yvel = calculaPulo(0.1,2,p.jumpHeight);
 		impulso = -20000;
-		//p.yvel += impulso * deltaTime;
 		p.row = 2;
 	}
 
@@ -169,21 +281,13 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 0;
 	}
 
-	//if(p.onGround)
-	//{
-		//p.yvel = 0;
-	//}
-	//else
-		//p.yvel += 10.0f * deltaTime;
-		//p.yvel += gravidade * deltaTime;
-
+	float aux = p.ypos;
 	p.xvel = movimentoLateral(p.xvel,p);
 	p.xpos += p.xvel;
 	p.yvel = calculaVelocidadePulo(p.yvel, impulso, gravidade, deltaTime);
 	p.ypos = calculaPosicaoPulo(p.ypos, p.yvel, deltaTime);
-	//p.ypos += p.yvel;
 
-	 if(p.ypos >= 400)
+	if(p.ypos >= 400)
 	{
 		p.onGround = true;
 		p.canJump = true;
@@ -192,34 +296,95 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 	else
 		p.onGround = false;
 
+	// Colisão com as plataformas
+	float w = 50;
+	float h = 50;
+	for (int i = 0; i < plat.size(); i++)
+	{
+		if (colidiu(p.xpos, p.ypos, p.xpos + w, p.ypos + h, plat[i].x, plat[i].y, plat[i].w + plat[i].x, plat[i].h + plat[i].y))
+		{
+			char c = sentidoColisao(p.xpos, p.ypos, p.xpos + w, p.ypos + h, plat[i].x, plat[i].y, plat[i].w + plat[i].x, plat[i].h + plat[i].y);
+			if ((c == 'l' && p.xvel > 0) || (c == 'r' && p.xvel < 0))
+				p.xpos -= p.xvel;
+            if(c == 'u')
+            {
+                p.ypos = aux;
+                p.onGround = true;
+                p.canJump = true;
+            }
+            if(c == 'd')
+                p.ypos = aux;
+//			else if (!(c == 'd' && p.yvel > 0))
+//			{
+//				p.ypos = aux;
+//				if (c == 'u')
+//				{
+//					p.onGround = true;
+//					p.canJump = true;
+//				}
+//			}
+		}
+	}
+
 	if(p.onGround)
 	{
 		p.yvel = 0;
 	}
 	return p;
 }
-///exercicio 2 aula 4
-inimigo atualizaInimigo (inimigo p,bool enemyLeft,bool enemyRight,float deltaTime)
+
+inimigo moveInimigo(inimigo i)
 {
-	if(p.apontaDireita || !p.apontaDireita)
-		p.fileiraAnimacao = 1;
+    float xpos, xvel, apontaDireita;
+    xpos = i.xpos;
+    xvel = i.xvel;
+    apontaDireita = i.apontaDireita;
 
-	if(p.xpos < 0)
-	{
-		p.xvel *= -1;
-		p.apontaDireita = 1;
-	}
+    /// COLOQUE SEU CÓDIGO AQUI
+    if(xpos < bordaEsq)
+    {
+        xvel *= -1;
+        apontaDireita = 1;
+    }
 
-	if(p.xpos > 1000)
-	{
-		p.xvel *= -1;
-		p.apontaDireita = 0;
-	}
+    if(xpos > 1000)
+    {
+        xvel *= -1;
+        apontaDireita = 0;
+    }
 
-	p.xpos = p.xpos + p.xvel;
-	return p;
+    xpos = xpos + xvel;
+
+    i.xpos = xpos;
+    i.xvel = xvel;
+    i.apontaDireita = apontaDireita;
+
+    return i;
 }
-///
+
+inimigo moveInimigo(inimigo i, Player p)
+{
+    float ix, ivel, apontaDireita, px, pvel;
+    ix = i.xpos;
+    ivel = i.xvel;
+    apontaDireita = i.apontaDireita;
+    px = p.xpos;
+    pvel = p.xvel;
+
+    /// COLOQUE SEU CÓDIGO AQUI
+    if((px - ix)*ivel < 0 && fabs(px - ix) > 100)
+    {
+        apontaDireita = !apontaDireita;
+        ivel *= -1;
+    }
+
+    ix = ix + ivel;
+    i.xpos = ix;
+    i.xvel = ivel;
+    i.apontaDireita = apontaDireita;
+
+    return i;
+}
 
 void mataPlayer(Player &p)
 {
@@ -248,6 +413,31 @@ int main()
 	inimigo enemy;
 	bool enemyLeft = true;
 	bool enemyRight = false;
+	bool colidindoPorCima = false;
+    bool colidindoDeFrente = false;
+
+	// Criando as plataformas
+	vector<plataforma> plataformas;
+	ifstream file("data/plataformas.txt");
+	if (file.is_open())
+	{
+		// O arquivo txt com os dados das plataformas é escrito da seguinte forma
+		// Primeira linha: número inteiro de plataformas que existem
+		// Linhas seguintes: quatro números separados por espaços que indicam respectivamente x, y, w (largura) e h (altura)
+		int n;
+		file >> n;
+		for (int i = 0; i < n; i++)
+		{
+			plataforma p;
+			file >> p.x;
+			file >> p.y;
+			file >> p.w;
+			file >> p.h;
+			p.rectShape.setPosition(p.x, p.y);
+			p.rectShape.setSize(Vector2f(p.w, p.h));
+			plataformas.push_back(p);
+		}
+	}
 
 	// Inicializando srand
 	srand(time(NULL));
@@ -316,12 +506,14 @@ int main()
 	Texture background;
 	Texture playerTexture;
 	Texture enemyTexture;
+	Texture platformTexture;
 	Texture letraTexture;
 	Texture letraSemCorTexture;
 
 	background.loadFromFile("data/images/background.jpg");
 	playerTexture.loadFromFile("data/images/Tux.png");
 	enemyTexture.loadFromFile("data/images/Tux.png");
+	platformTexture.loadFromFile("data/images/gelo.png");
 	letraTexture.loadFromFile("data/images/alfabeto.jpg");
 	letraSemCorTexture.loadFromFile("data/images/alfabeto_preto_e_branco.jpg");
 
@@ -329,6 +521,8 @@ int main()
 
 	playerRect.setTexture(&playerTexture);
 	enemyRect.setTexture(&enemyTexture);
+	for (int i = 0; i < plataformas.size(); i++)
+		plataformas[i].rectShape.setTexture(&platformTexture);
 	for (int i = 0; i < numeroDeLetras; i++)
 		letra[i].setTexture(&letraTexture);
 	for (int i = 0; i < tamanhoPalavraChave; i++)
@@ -384,8 +578,8 @@ int main()
 		limparInventario = Keyboard::isKeyPressed(Keyboard::Q);
 
 		// Atualizando o jogador e o inimigo
-		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime);
-		enemy = atualizaInimigo(enemy, enemyLeft, enemyRight, deltaTime);
+		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime, plataformas);
+		enemy = moveInimigo(enemy, player);
 
 		// Atualizando as letras
 		if (limparInventario)
@@ -399,7 +593,6 @@ int main()
 		// Atualizando a animação do jogador e do inimigo
 		playerRect.setTextureRect(playerAnimation.uvRect);
 		playerAnimation.update(player.row,deltaTime,player.faceRight);
-		//playerRect.move(player.xvel,player.yvel);
 		playerRect.setPosition(player.xpos,player.ypos);
 
 
@@ -407,43 +600,40 @@ int main()
 		enemyAnimation.update(enemy.fileiraAnimacao,deltaTime,enemy.apontaDireita);
 		enemyRect.move(enemy.xvel,enemy.yvel);
 
-		bool colidindoPorCima;
-		bool colidindoDeFrente;
-
 	    // Variáveis para a verificação de colisão:
-	    float posXPlayer = playerRect.getPosition().x;
-	    float posYPlayer = playerRect.getPosition().y;
-	    float larguraPlayer = playerRect.getGlobalBounds().width + posXPlayer;
-	    float alturaPlayer = playerRect.getGlobalBounds().height + posYPlayer;
-	    float velVertical = player.yvel;
-	    int pulando = player.onGround;
+        float playerX1 = playerRect.getPosition().x;
+        float playerY1 = playerRect.getPosition().y;
+        float playerX2 = playerRect.getGlobalBounds().width + playerX1;
+        float playerY2 = playerRect.getGlobalBounds().height + playerY1;
+        float velVertical = player.yvel;
+        int pulando = player.onGround;
 
-	    float posXInimigo = enemyRect.getPosition().x;
-	    float posYInimigo = enemyRect.getPosition().y;
-	    float larguraInimigo = enemyRect.getGlobalBounds().width + posXInimigo;
-	    float alturaInimigo = enemyRect.getGlobalBounds().height + posYInimigo;
+        float inimigoX1 = enemyRect.getPosition().x;
+        float inimigoY1 = enemyRect.getPosition().y;
+        float inimigoX2 = enemyRect.getGlobalBounds().width + inimigoX1;
+        float inimigoY2 = enemyRect.getGlobalBounds().height + inimigoY1;
 
-	    float alturaMinima = enemyRect.getGlobalBounds().height;
+        float alturaMinima = enemyRect.getGlobalBounds().height;
 
 
 		// Só checa colisão se ambos inimigo e jogador ainda estiverem vivos
 		if(enemy.vivo == 1 && player.vivo == 1)
-		{
-	            if (posXPlayer < larguraInimigo && larguraPlayer > posXInimigo && posYPlayer < alturaInimigo && alturaPlayer > posYInimigo)
-	            {
-	                if (pulando == 0 && posYPlayer >= alturaMinima && velVertical >= 0)
-	                {
-	                    colidindoPorCima = 1;
-	                    mataInimigo(enemy);
-	                    quica(player);
-	                }
-	                else
-	                {
-	                    colidindoDeFrente = 1;
-	                    mataPlayer(player);
-	                }
-	            }
-		}
+        {
+            if(colidiu(playerX1, playerY1, playerX2, playerY2, inimigoX1, inimigoY1, inimigoX2, inimigoY2))
+            {
+                if (pulando == 0 && playerY1 >= alturaMinima && velVertical >= 0)
+                {
+                    //colidindoPorCima = 1;
+                    mataInimigo(enemy);
+                    quica(player);
+                }
+                else
+                {
+                    //colidindoDeFrente = 1;
+                    mataPlayer(player);
+                }
+            }
+        }
 
 		// Colisão entre jogador e letra (se letra estiver visível)
 		for (int i = 0; i < numeroDeLetras; i++)
@@ -481,21 +671,21 @@ int main()
 		// Draw the sprite
 		app.draw(backgroundSprite);
 
-		// Só desenha o player se não tiver sido tocado de frente
-		if (!colidindoDeFrente)
-		{
-			app.draw(playerRect);
-			if(player.xpos >= (windowWidth*0.35) && player.xpos <= (background.getSize().x - windowWidth * 0.35) )
-	            camera.setCenter(player.xpos,300);
-//            else if(player.xpos < windowWidth*0.35)
-//                camera.setCenter(windowWidth*0.35, 300);
-//            else
-//                camera.setCenter(background.getSize().x - windowWidth*0.5, 300);
-		}
+		// Desenha as plataformas
+		for (int i = 0; i < plataformas.size(); i++)
+			app.draw(plataformas[i].rectShape);
 
-		// Só desenha o inimigo se não tiver sido tocado por cima
-		if (!colidindoPorCima)
-			app.draw(enemyRect);
+		// Só desenha o player se não tiver sido tocado de frente
+		if (player.vivo)
+        {
+            app.draw(playerRect);
+            if(player.xpos >= (windowWidth*0.35) && player.xpos <= (background.getSize().x - windowWidth * 0.35) )
+                camera.setCenter(player.xpos,300);
+        }
+
+        // Só desenha o inimigo se não tiver sido tocado por cima
+        if (enemy.vivo)
+            app.draw(enemyRect);
 
 		// Só desenha a letra se não tiver sido pega ainda
 		for (int i = 0; i < numeroDeLetras; i++)
