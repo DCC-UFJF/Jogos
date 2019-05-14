@@ -449,7 +449,7 @@ int main()
 	vector<char> listaDeLetrasAux;
 	char listaDeLetras[numeroDeLetras];
 	int tamanhoPalavraChave = strlen(palavraChave);
-	char palavra[tamanhoPalavraChave];
+	char palavra[tamanhoPalavraChave+1];
 	char inventarioLetras[numeroDeLetras];
 	int inventarioLetrasQuant[numeroDeLetras];
 	palavra[0] = '\0';
