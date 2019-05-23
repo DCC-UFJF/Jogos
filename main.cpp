@@ -7,6 +7,7 @@
 #include "Animacao.h"
 
 #define PALAVRACHAVE "helloworld"
+#define N 5
 
 // var
 int windowWidth = 800;
@@ -14,6 +15,8 @@ int windowHeight = 600;
 int chao = 401;
 int bordaEsq = 0;
 int bordaDir = 1940;
+
+bool resultadoRanking=true;
 
 using namespace sf;
 using namespace std;
@@ -45,6 +48,11 @@ typedef struct
 	float yvel = 0;
 	float xpos = 930;
 	float ypos = 401;
+	int pontuacao = 100;
+    bool enemyLeft = true;
+	bool enemyRight = false;
+    bool colidindoPorCima = false;
+    bool colidindoDeFrente = false;
 }
 inimigo;
 
@@ -66,6 +74,32 @@ typedef struct
 	float y = 350;
 }
 letraStruct;
+
+/*void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam)
+{
+
+    player.vivo = 1;
+	player.onGround = true;
+	player.canJump = true;
+    player.faceRight = true;
+	player.jumpHeight = 300;
+	player.xvel = 0;
+	player.yvel = 0;
+	player.xpos = 300;
+	player.ypos = chao;
+
+	for(int i=0; i<N; i++)
+    {
+        inimigos[i].vivo = i+1;
+        pontuacao[i] = 100*(i+1);
+        inimigos[i].xvel *= 1;
+        inimigos[i].xpos *= i+1;
+        inimigos[i].apontaDireita = 0;
+        inimigos[i].jumpHeight = 0;
+
+    }
+
+}*/
 
 int apertouEsq()
 {
@@ -91,7 +125,7 @@ int apertouZ()
         return 0;
 }
 
-/// Exercicio colisão de borda
+/// Exercicio colisÃ£o de borda
 int colisaoBorda(int posicaoPlayer)
 {
     int colidindo = 0;
@@ -106,17 +140,17 @@ int colisaoBorda(int posicaoPlayer)
     return colidindo;
 }
 
-/// Exercício colisão com objetos parte 1
+/// ExercÃ­cio colisÃ£o com objetos parte 1
 int colidiu(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
 {
-	// x1 é o lado esquerdo e x2 o direito. y1 é o lado de cima e y2 o de baixo
+	// x1 Ã© o lado esquerdo e x2 o direito. y1 Ã© o lado de cima e y2 o de baixo
 //	int x = 0, y = 0;
 //	x = (player_x1 >= plat_x1 && player_x1 <= plat_x2) ? 1 : x;
 //	x = (player_x2 >= plat_x1 && player_x2 <= plat_x2) ? 1 : x;
 //	y = (player_y1 >= plat_y1 && player_y1 <= plat_y2) ? 1 : y;
 //	y = (player_y2 >= plat_y1 && player_y2 <= plat_y2) ? 1 : y;
 //
-//	// Para configurar uma colisão precisa colidir em x e em y
+//	// Para configurar uma colisÃ£o precisa colidir em x e em y
 //	return (x && y);
 
     float player_dx = player_x2 - player_x1;
@@ -129,8 +163,8 @@ int colidiu(float player_x1, float player_y1, float player_x2, float player_y2, 
     float plat_cx = plat_x1 + plat_dx * 0.5f;
     float plat_cy = plat_y1 + plat_dy * 0.5f;
 
-//    cout << "player: (" << player_cx << ", " << player_cy << ", " << player_dx << ", " << player_dy << ")" << endl;
-//    cout << "platform: (" << plat_cx << ", " << plat_cy << ", " << plat_dx << ", " << plat_dy << ")" << endl;
+     //cout << "player: (" << player_cx << ", " << player_cy << ", " << player_dx << ", " << player_dy << ")" << endl;
+     //cout << "platform: (" << plat_cx << ", " << plat_cy << ", " << plat_dx << ", " << plat_dy << ")" << endl;
 
     if(fabs(plat_cx - player_cx) <= (player_dx + plat_dx)*0.5f &&
       (fabs(plat_cy - player_cy) <= (player_dy + plat_dy)*0.5f))
@@ -139,10 +173,10 @@ int colidiu(float player_x1, float player_y1, float player_x2, float player_y2, 
         return false;
 }
 
-/// Exercício colisão com objetos parte 2
+/// ExercÃ­cio colisÃ£o com objetos parte 2
 char sentidoColisao(float player_x1, float player_y1, float player_x2, float player_y2, float plat_x1, float plat_y1, float plat_x2, float plat_y2)
 {
-	// Calcula qual o lado (esquerda, direita, cima, baixo) mais próximo do jogador
+	// Calcula qual o lado (esquerda, direita, cima, baixo) mais prÃ³ximo do jogador
 	// As letras l, r, u, d, e significam respectivamente left, right, up, down, error
 	float l = fabs(player_x2 - plat_x1);
 	float r = fabs(player_x1 - plat_x2);
@@ -218,7 +252,7 @@ float calculaPosicaoPulo(float y0, float v, float delta_t)
     return y0 + v * delta_t;
 }
 
-/// Aula 3 exercício 1:
+/// Aula 3 exercÃ­cio 1:
 int comparar(char* chave, char* teste)
 {
 	int i;
@@ -231,7 +265,7 @@ int comparar(char* chave, char* teste)
 		return 0;
 }
 
-/// Aula 3 exercício 2:
+/// Aula 3 exercÃ­cio 2:
 void atualizaInventario(char palavra[], char lista[], int quant[])
 {
 	lista[0] = '\0'; // essa linha deve ser informada aos calouros
@@ -296,7 +330,7 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 	else
 		p.onGround = false;
 
-	// Colisão com as plataformas
+	// ColisÃ£o com as plataformas
 	float w = 50;
 	float h = 50;
 	for (int i = 0; i < plat.size(); i++)
@@ -340,7 +374,7 @@ inimigo moveInimigo(inimigo i)
     xvel = i.xvel;
     apontaDireita = i.apontaDireita;
 
-    /// COLOQUE SEU CÓDIGO AQUI
+    /// COLOQUE SEU CÃ“DIGO AQUI
     if(xpos < bordaEsq)
     {
         xvel *= -1;
@@ -371,7 +405,7 @@ inimigo moveInimigo(inimigo i, Player p)
     px = p.xpos;
     pvel = p.xvel;
 
-    /// COLOQUE SEU CÓDIGO AQUI
+    /// COLOQUE SEU CÃ“DIGO AQUI
     if((px - ix)*ivel < 0 && fabs(px - ix) > 100)
     {
         apontaDireita = !apontaDireita;
@@ -393,7 +427,7 @@ void mataPlayer(Player &p)
 
 void mataInimigo (inimigo &e)
 {
-    e.vivo = 0;
+    e.vivo -= 1;
 }
 
 void quica (Player &p)
@@ -401,16 +435,96 @@ void quica (Player &p)
     p.yvel -= 500;
 }
 
+///Salvar ranking do jogo
+
+fstream ranking;
+int pontuacaoJogadores[5];
+
+void defineRankingInicioJogo()
+{
+  string str;
+  int numero, contador=0;
+  while(!ranking.eof())
+  {
+      ranking>>str;
+
+      if(str=="lugar:")
+      {
+          ranking>>numero;
+          pontuacaoJogadores[contador]=numero;
+          contador++;
+      }
+  }
+  for(int i = 0; i<5; i++)
+  {
+      cout<<pontuacaoJogadores[i]<<endl;
+  }
+}
+
+void defineRankingFinalJogo(int pontuacaoNova)
+{
+    int aux;
+
+  for(int i = 0; i<5; i++)
+  {
+      if(pontuacaoNova > pontuacaoJogadores[i])
+      {
+          aux = pontuacaoJogadores[i];
+          pontuacaoJogadores[i] = pontuacaoNova;
+          pontuacaoNova = aux;
+      }
+  }
+
+}
+
+void novoTextoRanking()
+{
+    string str;
+
+    str =
+     "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
+    +"\nSegundo lugar: " +  to_string(pontuacaoJogadores[1])
+    +"\nTerceiro lugar: " + to_string(pontuacaoJogadores[2])
+    +"\nQuarto lugar: " +  to_string(pontuacaoJogadores[3])
+    +"\nQuinto lugar: " + to_string(pontuacaoJogadores[4]);
+
+    ranking.close();
+    ranking.open("data/ranking.txt");
+
+    ranking<<str<<endl;
+
+}
+
 int main()
 {
-	// Criando a câmera
+    //Criando sistema de ranking;
+    ranking.open("data/ranking.txt");
+    /*ranking.write("TESTEEEE\nTESSTE",15);
+     ranking.write(" 0",2);*/
+
+    defineRankingInicioJogo();
+    //defineRankingFinalJogo(200);
+
+	// Criando a cÃ¢mera
 	sf::View camera(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(512.0f,512.0f));
 
 	// Criando as estruturas do player e do inimigo
 	Player player;
 	bool playerUp,playerLeft,playerRight = false;
 	bool limparInventario = false;
-	inimigo enemy;
+	//inimigo enemy;
+	inimigo inimigos[N];
+	int pontuacao[N];
+	int pontuacaoNova = 0;
+
+	for(int i=0; i<N; i++)
+    {
+        inimigos[i].vivo = i+1;
+        pontuacao[i] = 100*(i+1);
+        inimigos[i].xvel *= 1;
+        inimigos[i].xpos *= i+1;
+    }
+
 	bool enemyLeft = true;
 	bool enemyRight = false;
 	bool colidindoPorCima = false;
@@ -421,9 +535,9 @@ int main()
 	ifstream file("data/plataformas.txt");
 	if (file.is_open())
 	{
-		// O arquivo txt com os dados das plataformas é escrito da seguinte forma
-		// Primeira linha: número inteiro de plataformas que existem
-		// Linhas seguintes: quatro números separados por espaços que indicam respectivamente x, y, w (largura) e h (altura)
+		// O arquivo txt com os dados das plataformas Ã© escrito da seguinte forma
+		// Primeira linha: nÃºmero inteiro de plataformas que existem
+		// Linhas seguintes: quatro nÃºmeros separados por espaÃ§os que indicam respectivamente x, y, w (largura) e h (altura)
 		int n;
 		file >> n;
 		for (int i = 0; i < n; i++)
@@ -442,7 +556,7 @@ int main()
 	// Inicializando srand
 	srand(time(NULL));
 
-	// Criando o conteúdo da aula 2
+	// Criando o conteÃºdo da aula 2
 	int numeroDeLetras = 20;
 	letraStruct letraDados[numeroDeLetras];
 	char* palavraChave = (char*) PALAVRACHAVE; // adiciona automaticamente '\0'
@@ -482,8 +596,17 @@ int main()
 	RectangleShape playerRect(Vector2f(50.0f,50.0f));
 	playerRect.setPosition(player.xpos,player.ypos);
 
-	RectangleShape enemyRect(Vector2f(50.0f,50.0f));
-	enemyRect.setPosition(enemy.xpos,enemy.ypos);
+	//RectangleShape enemyRect(Vector2f(50.0f,50.0f));
+	//enemyRect.setPosition(enemy.xpos,enemy.ypos);
+
+	vector<RectangleShape> inimigosRect;
+	for(int i = 0; i<N; i++)
+    {
+    RectangleShape inimigoRect(Vector2f(50.0f,50.0f));
+    inimigoRect.setPosition(inimigos[i].xpos, inimigos[i].ypos);
+    inimigosRect.push_back(inimigoRect);
+	//enemyRect.setPosition(enemy.xpos,enemy.ypos);
+    }
 
 	vector<RectangleShape> letra;
 	for (int i = 0; i < numeroDeLetras; i++)
@@ -517,10 +640,22 @@ int main()
 	letraTexture.loadFromFile("data/images/alfabeto.jpg");
 	letraSemCorTexture.loadFromFile("data/images/alfabeto_preto_e_branco.jpg");
 
+	vector<Texture> inimigosTexture;
+	for(int i=0; i<N; i++)
+    {
+        Texture inimigoTexture;
+        inimigoTexture.loadFromFile("data/images/Tux.png");
+
+        inimigosTexture.push_back(inimigoTexture);
+    }
+
 	Sprite backgroundSprite (background);
 
 	playerRect.setTexture(&playerTexture);
-	enemyRect.setTexture(&enemyTexture);
+	//enemyRect.setTexture(&enemyTexture);
+	for(int i = 0; i < inimigosRect.size(); i++)
+        inimigosRect[i].setTexture(&inimigosTexture[i]);
+
 	for (int i = 0; i < plataformas.size(); i++)
 		plataformas[i].rectShape.setTexture(&platformTexture);
 	for (int i = 0; i < numeroDeLetras; i++)
@@ -534,29 +669,48 @@ int main()
 	}
 
 	// Cor do inimigo
-	enemyRect.setFillColor(salmon);
+	//enemyRect.setFillColor(salmon);
+	for(int i = 0; i < N; i++)
+    {
+        Color cor(255*i,225*(N-i), 225*i/2);
+        inimigosRect[i].setFillColor(cor);
+    }
 
-	// Define as animações
+	// Define as animaÃ§Ãµes
 	Animacao playerAnimation(&playerTexture,Vector2u(3,9),0.3f);
-	Animacao enemyAnimation(&enemyTexture,Vector2u(3,9),0.3f);
+	//Animacao enemyAnimation(&enemyTexture,Vector2u(3,9),0.3f);
+
+	vector<Animacao> inimigosAnimation;
+	for(int i = 0; i<N; i++)
+    {
+        Animacao inimigoAnimacao(&enemyTexture,Vector2u(3,9),0.3f);
+        inimigosAnimation.push_back(inimigoAnimacao);
+    }
+
 	float deltaTime = 0.0f;
 	Clock relogio;
 
-	// Define o retângulo da textura da letra
+	// Define o retÃ¢ngulo da textura da letra
 	for (int i = 0; i < numeroDeLetras; i++)
 		letra[i].setTextureRect(IntRect((letraDados[i].letra - 'a') % 6 * 96, (letraDados[i].letra - 'a') / 6 * 96, 96, 96));
 	for (int i = 0; i < tamanhoPalavraChave; i++)
 		letraResposta[i].setTextureRect(IntRect((palavraChave[i] - 'a') % 6 * 96, (palavraChave[i] - 'a') / 6 * 96, 96, 96));
 
-	// Parâmetros padrão de texto
+	// ParÃ¢metros padrÃ£o de texto
 	Font font;
 	font.loadFromFile("Caveat-Bold.ttf");
 	Text text;
 	text.setFont(font);
 
+    float inimigosX1[N];
+    float inimigosY1[N];
+    float inimigosX2[N];
+    float inimigosY2[N];
+
 	// Inicia o loop do jogo
 	while (app.isOpen())
 	{
+
 		// Process events
 		app.setFramerateLimit(60);
 		deltaTime = relogio.restart().asSeconds();
@@ -579,7 +733,9 @@ int main()
 
 		// Atualizando o jogador e o inimigo
 		player = playerUpdate(player,playerUp,playerLeft,playerRight,deltaTime, plataformas);
-		enemy = moveInimigo(enemy, player);
+		//enemy = moveInimigo(enemy, player);
+		for(int i = 0; i<N; i++)
+            inimigos[i] = moveInimigo(inimigos[i], player);
 
 		// Atualizando as letras
 		if (limparInventario)
@@ -588,19 +744,27 @@ int main()
 			for (int i = 0; i < numeroDeLetras; i++)
 				letraDados[i].visivel = true;
 			atualizaInventario(palavra, inventarioLetras, inventarioLetrasQuant);
+            limparInventario = false;
 		}
 
-		// Atualizando a animação do jogador e do inimigo
+		// Atualizando a animaÃ§Ã£o do jogador e do inimigo
 		playerRect.setTextureRect(playerAnimation.uvRect);
 		playerAnimation.update(player.row,deltaTime,player.faceRight);
 		playerRect.setPosition(player.xpos,player.ypos);
 
 
-		enemyRect.setTextureRect(enemyAnimation.uvRect);
-		enemyAnimation.update(enemy.fileiraAnimacao,deltaTime,enemy.apontaDireita);
-		enemyRect.move(enemy.xvel,enemy.yvel);
+		//enemyRect.setTextureRect(enemyAnimation.uvRect);
+		//enemyAnimation.update(enemy.fileiraAnimacao,deltaTime,enemy.apontaDireita);
+		//enemyRect.move(enemy.xvel,enemy.yvel);
 
-	    // Variáveis para a verificação de colisão:
+		for(int i = 0; i<N; i++)
+        {
+            inimigosRect[i].setTextureRect(inimigosAnimation[i].uvRect);
+            inimigosAnimation[i].update(inimigos[i].fileiraAnimacao,deltaTime,inimigos[i].apontaDireita);
+            inimigosRect[i].move(inimigos[i].xvel,inimigos[i].yvel);
+        }
+
+	    // VariÃ¡veis para a verificaÃ§Ã£o de colisÃ£o:
         float playerX1 = playerRect.getPosition().x;
         float playerY1 = playerRect.getPosition().y;
         float playerX2 = playerRect.getGlobalBounds().width + playerX1;
@@ -608,34 +772,51 @@ int main()
         float velVertical = player.yvel;
         int pulando = player.onGround;
 
-        float inimigoX1 = enemyRect.getPosition().x;
-        float inimigoY1 = enemyRect.getPosition().y;
-        float inimigoX2 = enemyRect.getGlobalBounds().width + inimigoX1;
-        float inimigoY2 = enemyRect.getGlobalBounds().height + inimigoY1;
+        //float inimigoX1 = enemyRect.getPosition().x;
+        //float inimigoY1 = enemyRect.getPosition().y;
+        //float inimigoX2 = enemyRect.getGlobalBounds().width + inimigoX1;
+        //float inimigoY2 = enemyRect.getGlobalBounds().height + inimigoY1;
 
-        float alturaMinima = enemyRect.getGlobalBounds().height;
-
-
-		// Só checa colisão se ambos inimigo e jogador ainda estiverem vivos
-		if(enemy.vivo == 1 && player.vivo == 1)
+        for(int i = 0; i < N; i++)
         {
-            if(colidiu(playerX1, playerY1, playerX2, playerY2, inimigoX1, inimigoY1, inimigoX2, inimigoY2))
+           inimigosX1[i] = inimigosRect[i].getPosition().x;
+           inimigosY1[i] = inimigosRect[i].getPosition().y;
+           inimigosX2[i] = inimigosRect[i].getGlobalBounds().width + inimigosX1[i];
+           inimigosY2[i] = inimigosRect[i].getGlobalBounds().height + inimigosY1[i];
+        }
+
+        float alturaMinima = inimigosRect[0].getGlobalBounds().height;
+
+
+		// SÃ³ checa colisÃ£o se ambos inimigo e jogador ainda estiverem vivos
+		for(int i = 0; i < N; i++)
+        {
+            if(inimigos[i].vivo > 0 && player.vivo == 1)
             {
-                if (pulando == 0 && playerY1 >= alturaMinima && velVertical >= 0)
+                if(colidiu(playerX1, playerY1, playerX2, playerY2, inimigosX1[i], inimigosY1[i], inimigosX2[i], inimigosY2[i]))
                 {
-                    //colidindoPorCima = 1;
-                    mataInimigo(enemy);
-                    quica(player);
-                }
-                else
-                {
-                    //colidindoDeFrente = 1;
-                    mataPlayer(player);
+                    if (pulando == 0 && playerY1 >= alturaMinima && velVertical >= 0)
+                    {
+                        //colidindoPorCima = 1;
+                        mataInimigo(inimigos[i]);
+                        quica(player);
+
+                        if(inimigos[i].vivo <= 0)
+                        {
+                            pontuacaoNova+=pontuacao[i];
+                            cout<<pontuacaoNova<<endl;
+                        }
+
+                    }
+                    else
+                    {
+                        //colidindoDeFrente = 1;
+                        mataPlayer(player);
+                    }
                 }
             }
         }
-
-		// Colisão entre jogador e letra (se letra estiver visível)
+		// ColisÃ£o entre jogador e letra (se letra estiver visÃ­vel)
 		for (int i = 0; i < numeroDeLetras; i++)
 		{
 			if (letraDados[i].visivel && player.vivo == 1)
@@ -664,9 +845,9 @@ int main()
 		// Clear screen
 		app.clear();
 
-		// Ajusta a câmera
+		// Ajusta a cÃ¢mera
 		app.setView(camera);
-		//camera.setCenter(1000, 300); // Caso o jogador esteja morto, a câmera vai pro meio do mapa
+		//camera.setCenter(1000, 300); // Caso o jogador esteja morto, a cÃ¢mera vai pro meio do mapa
 
 		// Draw the sprite
 		app.draw(backgroundSprite);
@@ -675,7 +856,7 @@ int main()
 		for (int i = 0; i < plataformas.size(); i++)
 			app.draw(plataformas[i].rectShape);
 
-		// Só desenha o player se não tiver sido tocado de frente
+		// SÃ³ desenha o player se nÃ£o tiver sido tocado de frente
 		if (player.vivo)
         {
             app.draw(playerRect);
@@ -683,11 +864,15 @@ int main()
                 camera.setCenter(player.xpos,300);
         }
 
-        // Só desenha o inimigo se não tiver sido tocado por cima
-        if (enemy.vivo)
-            app.draw(enemyRect);
+        // SÃ³ desenha o inimigo se nÃ£o tiver sido tocado por cima
+        //if (enemy.vivo)
+          //  app.draw(enemyRect);
 
-		// Só desenha a letra se não tiver sido pega ainda
+        for(int i=0; i<N; i++)
+            if (inimigos[i].vivo)
+                app.draw(inimigosRect[i]);
+
+		// SÃ³ desenha a letra se nÃ£o tiver sido pega ainda
 		for (int i = 0; i < numeroDeLetras; i++)
 			if (letraDados[i].visivel)
 				app.draw(letra[i]);
@@ -713,7 +898,7 @@ int main()
 				letraPalavra[i].setFillColor(green);
 				text.setFillColor(Color::Green);
 			    text.setCharacterSize(72);
-			    text.setString("Você conseguiu!");
+			    text.setString("VocÃª conseguiu!");
 			    int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
 			    int y = camera.getCenter().y - text.getLocalBounds().height / 2;
 			    text.setPosition(x, y - 72);
@@ -730,7 +915,7 @@ int main()
 			app.draw(letraPalavra[i]);
 		}
 
-		// Atualiza o inventário
+		// Atualiza o inventÃ¡rio
 		n = strlen(inventarioLetras);
 		for (int i = 0; i < n; i++)
 		{
@@ -755,19 +940,65 @@ int main()
 		// Game over
 		if (!player.vivo)
 		{
-			text.setFillColor(Color::Red);
-			text.setCharacterSize(72);
-			text.setString("Fim do jogo!");
-			int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
-			int y = camera.getCenter().y - text.getLocalBounds().height / 2;
-			text.setPosition(x, y - 72);
-			app.draw(text);
-			text.setCharacterSize(36);
-			text.setString("Pressione ALT+F4 para sair");
-			x = camera.getCenter().x - text.getLocalBounds().width  / 2;
-			y = camera.getCenter().y - text.getLocalBounds().height / 2;
-			text.setPosition(x, y);
-			app.draw(text);
+		    if(resultadoRanking)
+            {
+                text.setFillColor(Color::Red);
+                text.setCharacterSize(72);
+                text.setString("Fim do jogo!");
+                int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+                int y = camera.getCenter().y - text.getLocalBounds().height / 2;
+                text.setPosition(x, y - 72);
+                app.draw(text);
+                text.setCharacterSize(36);
+                text.setString("Pressione ALT+F4 para sair");
+                x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+                y = camera.getCenter().y - text.getLocalBounds().height / 2;
+                text.setPosition(x, y);
+                app.draw(text);
+                text.setCharacterSize(36);
+                text.setString("Pressione S para salvar sua pontuaÃ§Ã£o");
+                x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+                y = camera.getCenter().y + text.getLocalBounds().height;
+                text.setPosition(x, y);
+                app.draw(text);
+                text.setCharacterSize(30);
+                text.setString("Pressione R reiniciar o jogo");
+                x = camera.getCenter().x - text.getLocalBounds().width  / 2 ;
+                y = camera.getCenter().y + 4*text.getLocalBounds().height;
+                text.setPosition(x, y);
+                app.draw(text);
+                if((Keyboard::isKeyPressed(Keyboard::S)))
+                {
+                    defineRankingFinalJogo(pontuacaoNova);
+                    novoTextoRanking();
+                    resultadoRanking = false;
+                }
+                if((Keyboard::isKeyPressed(Keyboard::R)))
+                {
+                    //reiniciarLevel(player,inimigos,pontuacao,N);
+                    pontuacaoNova = 0;
+                    limparInventario = true;
+
+                }
+            }else
+            {
+                string str;
+                 str =
+                     "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
+                    +"\nSegundo lugar: " +  to_string(pontuacaoJogadores[1])
+                    +"\nTerceiro lugar: " + to_string(pontuacaoJogadores[2])
+                    +"\nQuarto lugar: " +  to_string(pontuacaoJogadores[3])
+                    +"\nQuinto lugar: " + to_string(pontuacaoJogadores[4]);
+                text.setFillColor(Color::Red);
+                text.setCharacterSize(36);
+                text.setString(str);
+                int x = camera.getCenter().x - text.getLocalBounds().width  / 2;
+                int y = camera.getCenter().y - text.getLocalBounds().height / 2;
+                text.setPosition(x, y - 72);
+                app.draw(text);
+            }
+
+
 		}
 
 		// Update the window
