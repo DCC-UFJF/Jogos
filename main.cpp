@@ -422,7 +422,7 @@ void defineRankingInicioJogo()
     }
 }
 
-///aula 3 exercicio 3
+///aula 3 exercicio 4
 void defineRankingFinalJogo(int pontuacaoNova)
 {
     int aux;
@@ -518,24 +518,29 @@ int main()
     vector<char> listaDeLetrasAux;
     char listaDeLetras[numeroDeLetras];
     int tamanhoPalavraChave = strlen(palavraChave);
-    char palavra[tamanhoPalavraChave+1];
+    char palavra[tamanhoPalavraChave];
     char inventarioLetras[numeroDeLetras];
     int inventarioLetrasQuant[numeroDeLetras];
     palavra[0] = '\0';
     inventarioLetras[0] = '\0';
-    for (int i = 0; i < tamanhoPalavraChave; i++)
-        listaDeLetrasAux.push_back(palavraChave[i]);
-    for (int i = tamanhoPalavraChave; i < numeroDeLetras; i++)
-        listaDeLetrasAux.push_back(palavraChave[rand() % tamanhoPalavraChave]);
+    char aux[numeroDeLetras];
 
+    for (int i = 0; i < tamanhoPalavraChave; i++)
+        aux[i] = palavraChave[i];
+    for (int i = tamanhoPalavraChave; i < numeroDeLetras; i++)
+        aux[i] = palavraChave[rand() % tamanhoPalavraChave];
+
+    ///Exercicio 3 aula 3
     // Embaralhando a lista
     for (int i = 0; i < numeroDeLetras; i++)
     {
         int r = rand() % (numeroDeLetras - i);
-        listaDeLetras[i] = listaDeLetrasAux[r];
-        listaDeLetrasAux.erase(listaDeLetrasAux.begin() + r);
+        listaDeLetras[i] = aux[r];
+        for (int j = r; j < numeroDeLetras - i - 1; j++)
+            aux[j] = aux[j + 1];
     }
 
+    //posicionando na tela
     for (int i = 0; i < numeroDeLetras; i++)
     {
         letraDados[i].letra = listaDeLetras[i];
