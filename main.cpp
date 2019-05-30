@@ -75,31 +75,28 @@ typedef struct
 }
 letraStruct;
 
-/*void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam)
+///Aula 3 - Exercicio 0
+void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam)
 {
-
     player.vivo = 1;
-	player.onGround = true;
-	player.canJump = true;
-    player.faceRight = true;
-	player.jumpHeight = 300;
-	player.xvel = 0;
-	player.yvel = 0;
-	player.xpos = 300;
-	player.ypos = chao;
+    player.onGround = 1;
+    player.canJump = 1;
+    player.faceRight = 1;
+    player.jumpHeight = 300;
+    player.xvel = 0;
+    player.yvel = 0;
+    player.xpos = 300;
+    player.ypos = chao;
 
-	for(int i=0; i<N; i++)
+    for(int i=0; i<N; i++)
     {
         inimigos[i].vivo = i+1;
         pontuacao[i] = 100*(i+1);
-        inimigos[i].xvel *= 1;
-        inimigos[i].xpos *= i+1;
+        inimigos[i].xpos = 930*(i+1);
         inimigos[i].apontaDireita = 0;
         inimigos[i].jumpHeight = 0;
-
     }
-
-}*/
+}
 
 int apertouEsq()
 {
@@ -225,38 +222,6 @@ float calculaPosicaoPulo(float y0, float v, float delta_t)
     return y0 + v * delta_t;
 }
 
-/// Aula 3 exercício 1:
-int comparar(char* chave, char* teste)
-{
-    int i;
-    for (i = 0; chave[i] != '\0' && teste[i] != '\0'; i++)
-        if (chave[i] != teste[i])
-            return 0;
-    if (chave[i] == '\0' && teste[i] == '\0')
-        return 1;
-    else
-        return 0;
-}
-
-/// Aula 3 exercício 2:
-void atualizaInventario(char palavra[], char lista[], int quant[])
-{
-    lista[0] = '\0'; // essa linha deve ser informada aos calouros
-    int i;
-    for (i = 0; palavra[i] != '\0'; i++)
-    {
-        int j = 0;
-        while (lista[j] != '\0' && lista[j] != palavra[i])
-            j++;
-        if (lista[j] == '\0')
-        {
-            lista[j + 1] = '\0';
-            lista[j] = palavra[i];
-            quant[j] = 0;
-        }
-        quant[j]++;
-    }
-}
 
 Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime, vector<plataforma> plat)
 {
@@ -321,15 +286,14 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
             }
             if(c == 'd')
                 p.ypos = aux;
-
         }
-
-        if(p.onGround)
-        {
-            p.yvel = 0;
-        }
-        return p;
     }
+
+    if(p.onGround)
+    {
+        p.yvel = 0;
+    }
+    return p;
 }
 
 inimigo moveInimigo(inimigo i)
@@ -338,6 +302,7 @@ inimigo moveInimigo(inimigo i)
     xpos = i.xpos;
     xvel = i.xvel;
     apontaDireita = i.apontaDireita;
+
     if(xpos < bordaEsq)
     {
         xvel *= -1;
@@ -367,6 +332,7 @@ inimigo moveInimigo(inimigo i, Player p)
     apontaDireita = i.apontaDireita;
     px = p.xpos;
     pvel = p.xvel;
+
     if((px - ix)*ivel < 0 && fabs(px - ix) > 100)
     {
         apontaDireita = !apontaDireita;
@@ -422,11 +388,55 @@ void defineRankingInicioJogo()
     }
 }
 
-///aula 3 exercicio 4
+/// Aula 3 exercício 1:
+int comparar(char* chave, char* teste)
+{
+    int i;
+    for (i = 0; chave[i] != '\0' && teste[i] != '\0'; i++)
+        if (chave[i] != teste[i])
+            return 0;
+    if (chave[i] == '\0' && teste[i] == '\0')
+        return 1;
+    else
+        return 0;
+}
+
+/// Aula 3 exercício 2:
+void atualizaInventario(char palavra[], char lista[], int quant[])
+{
+    lista[0] = '\0'; // essa linha deve ser informada aos calouros
+    int i;
+    for (i = 0; palavra[i] != '\0'; i++)
+    {
+        int j = 0;
+        while (lista[j] != '\0' && lista[j] != palavra[i])
+            j++;
+        if (lista[j] == '\0')
+        {
+            lista[j + 1] = '\0';
+            lista[j] = palavra[i];
+            quant[j] = 0;
+        }
+        quant[j]++;
+    }
+}
+
+///aula 3 exercicio 3
+void embaralharLista(int numeroDeLetras, char listaDeLetras[],char todasAsLetras[])
+{
+    for (int i = 0; i < numeroDeLetras; i++)
+    {
+        int r = rand() % (numeroDeLetras - i);
+        listaDeLetras[i] = todasAsLetras[r];
+        for (int j = r; j < numeroDeLetras - i - 1; j++)
+            todasAsLetras[j] = todasAsLetras[j + 1];
+    }
+}
+
+/// aula 3 exercicio 4
 void defineRankingFinalJogo(int pontuacaoNova)
 {
     int aux;
-
     for(int i = 0; i<5; i++)
     {
         if(pontuacaoNova > pontuacaoJogadores[i])
@@ -480,7 +490,7 @@ int main()
         inimigos[i].vivo = i+1;
         pontuacao[i] = 100*(i+1);
         inimigos[i].xvel *= 1;
-        inimigos[i].xpos *= i+1;
+        inimigos[i].xpos = 930 * (i+1);
     }
 
     bool enemyLeft = true;
@@ -530,15 +540,7 @@ int main()
     for (int i = tamanhoPalavraChave; i < numeroDeLetras; i++)
         aux[i] = palavraChave[rand() % tamanhoPalavraChave];
 
-    ///Exercicio 3 aula 3
-    // Embaralhando a lista
-    for (int i = 0; i < numeroDeLetras; i++)
-    {
-        int r = rand() % (numeroDeLetras - i);
-        listaDeLetras[i] = aux[r];
-        for (int j = r; j < numeroDeLetras - i - 1; j++)
-            aux[j] = aux[j + 1];
-    }
+    embaralharLista(numeroDeLetras, listaDeLetras, aux);
 
     //posicionando na tela
     for (int i = 0; i < numeroDeLetras; i++)
@@ -623,6 +625,7 @@ int main()
         letraInventario[i].setFillColor(Color::Cyan);
     }
 
+    // Cor do inimigo
     for(int i = 0; i < N; i++)
     {
         Color cor(255*i,225*(N-i), 225*i/2);
@@ -695,7 +698,7 @@ int main()
             for (int i = 0; i < numeroDeLetras; i++)
                 letraDados[i].visivel = true;
             atualizaInventario(palavra, inventarioLetras, inventarioLetrasQuant);
-            limparInventario = false;
+
         }
 
         // Atualizando a animação do jogador e do inimigo
@@ -708,7 +711,9 @@ int main()
         {
             inimigosRect[i].setTextureRect(inimigosAnimation[i].uvRect);
             inimigosAnimation[i].update(inimigos[i].fileiraAnimacao,deltaTime,inimigos[i].apontaDireita);
+            inimigosRect[i].setPosition(inimigos[i].xpos,inimigos[i].ypos);
             inimigosRect[i].move(inimigos[i].xvel,inimigos[i].yvel);
+
         }
 
         // Variáveis para a verificação de colisão:
@@ -739,20 +744,17 @@ int main()
                 {
                     if (pulando == 0 && playerY1 >= alturaMinima && velVertical >= 0)
                     {
-                        //colidindoPorCima = 1;
                         mataInimigo(inimigos[i]);
                         quica(player);
 
                         if(inimigos[i].vivo <= 0)
                         {
                             pontuacaoNova+=pontuacao[i];
-                            cout<<pontuacaoNova<<endl;
                         }
 
                     }
                     else
                     {
-                        //colidindoDeFrente = 1;
                         mataPlayer(player);
                     }
                 }
@@ -913,9 +915,12 @@ int main()
                 }
                 if((Keyboard::isKeyPressed(Keyboard::R)))
                 {
-                    //reiniciarLevel(player,inimigos,pontuacao,N);
+                    reiniciarLevel(player,inimigos,pontuacao,N);
                     pontuacaoNova = 0;
-                    limparInventario = true;
+                    palavra[0] = '\0';
+                    for (int i = 0; i < numeroDeLetras; i++)
+                        letraDados[i].visivel = true;
+                    atualizaInventario(palavra, inventarioLetras, inventarioLetrasQuant);
 
                 }
             }
