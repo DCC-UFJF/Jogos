@@ -7,7 +7,7 @@
 #include "Animacao.h"
 
 #define PALAVRACHAVE "helloworld"
-#define N 5
+#define N 10
 
 // var
 int windowWidth = 800;
@@ -75,7 +75,9 @@ typedef struct
 }
 letraStruct;
 
-///Aula 3 - Exercicio 0
+void defineInimigos(inimigo inimigos[], int pontuacao[], int tam);
+
+/// Aula 3 - Exercicio 0
 void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam)
 {
     player.vivo = 1;
@@ -88,14 +90,7 @@ void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam
     player.xpos = 300;
     player.ypos = chao;
 
-    for(int i=0; i<N; i++)
-    {
-        inimigos[i].vivo = i+1;
-        pontuacao[i] = 100*(i+1);
-        inimigos[i].xpos = 930*(i+1);
-        inimigos[i].apontaDireita = 0;
-        inimigos[i].jumpHeight = 0;
-    }
+    defineInimigos(inimigos, pontuacao, tam);
 }
 
 int apertouEsq()
@@ -362,12 +357,7 @@ void quica (Player &p)
     p.yvel -= 500;
 }
 
-//Salvar ranking do jogo
-
-fstream ranking;
-int pontuacaoJogadores[5];
-
-void defineRankingInicioJogo()
+void defineRankingInicioJogo(fstream& ranking, int pontuacaoJogadores[], int tamRanking)
 {
     string str;
     int numero, contador=0;
@@ -382,14 +372,14 @@ void defineRankingInicioJogo()
             contador++;
         }
     }
-    for(int i = 0; i<5; i++)
+    for(int i = 0; i<tamRanking; i++)
     {
         cout<<pontuacaoJogadores[i]<<endl;
     }
 }
 
-/// Aula 3 exercício 1:
-int comparar(char* chave, char* teste)
+/// Aula 3 - Exercício 1
+int comparar(char chave[], char teste[])
 {
     int i;
     for (i = 0; chave[i] != '\0' && teste[i] != '\0'; i++)
@@ -401,7 +391,7 @@ int comparar(char* chave, char* teste)
         return 0;
 }
 
-/// Aula 3 exercício 2:
+/// Aula 3 - Exercício 2
 void atualizaInventario(char palavra[], char lista[], int quant[])
 {
     lista[0] = '\0'; // essa linha deve ser informada aos calouros
@@ -421,8 +411,8 @@ void atualizaInventario(char palavra[], char lista[], int quant[])
     }
 }
 
-///aula 3 exercicio 3
-void embaralharLista(int numeroDeLetras, char listaDeLetras[],char todasAsLetras[])
+/// Aula 3 - Exercicio 3
+void embaralharLista(int numeroDeLetras, char listaDeLetras[], char todasAsLetras[])
 {
     for (int i = 0; i < numeroDeLetras; i++)
     {
@@ -433,11 +423,36 @@ void embaralharLista(int numeroDeLetras, char listaDeLetras[],char todasAsLetras
     }
 }
 
-/// aula 3 exercicio 4
-void defineRankingFinalJogo(int pontuacaoNova)
+void inicializaInimigo(inimigo inimigos[], int indice, int vidas, float velocidade, int posicao)
+{
+    inimigos[indice].vivo = vidas;
+    inimigos[indice].xvel = velocidade;
+    inimigos[indice].xpos = posicao;
+}
+
+/// Aula 3 - Exercicio 4
+void defineInimigos(inimigo inimigos[], int pontuacao[], int tam)
+{
+    int vidas;          // número de vidas do inimigo
+    float velocidade;   // velocidade do inimigo
+    int posicao;        // posição inicial do inimigo (entre 0 e 1940)
+
+    for(int i=0; i<tam; i++)
+    {
+        vidas = i+1;
+        int r = rand() % 2;
+        pontuacao[i] = 100 + r*100;
+        velocidade = -3 - r*2;
+        posicao = 930 * (i+1);
+        inicializaInimigo(inimigos, i, vidas, velocidade, posicao);
+    }
+}
+
+/// Aula 3 - Exercicio 5
+void defineRankingFinalJogo(int pontuacaoNova, int pontuacaoJogadores[], int tamRanking)
 {
     int aux;
-    for(int i = 0; i<5; i++)
+    for(int i = 0; i<tamRanking; i++)
     {
         if(pontuacaoNova > pontuacaoJogadores[i])
         {
@@ -449,16 +464,20 @@ void defineRankingFinalJogo(int pontuacaoNova)
 
 }
 
-void novoTextoRanking()
+void novoTextoRanking(fstream& ranking, int pontuacaoJogadores[], int tamRanking)
 {
     string str;
 
-    str =
-        "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
-        +"\nSegundo lugar: " +  to_string(pontuacaoJogadores[1])
-        +"\nTerceiro lugar: " + to_string(pontuacaoJogadores[2])
-        +"\nQuarto lugar: " +  to_string(pontuacaoJogadores[3])
-        +"\nQuinto lugar: " + to_string(pontuacaoJogadores[4]);
+    for(int i = 0; i < tamRanking; i++)
+    {
+        str += to_string(i+1) + "o lugar: " + to_string(pontuacaoJogadores[i]) + "\n";
+    }
+//    str =
+//        "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
+//        +"\nSegundo lugar: " +  to_string(pontuacaoJogadores[1])
+//        +"\nTerceiro lugar: " + to_string(pontuacaoJogadores[2])
+//        +"\nQuarto lugar: " +  to_string(pontuacaoJogadores[3])
+//        +"\nQuinto lugar: " + to_string(pontuacaoJogadores[4]);
 
     ranking.close();
     ranking.open("data/ranking.txt");
@@ -469,10 +488,14 @@ void novoTextoRanking()
 
 int main()
 {
+    //Salvar ranking do jogo
+    fstream ranking;
+    int pontuacaoJogadores[5];
+
     //Criando sistema de ranking;
     ranking.open("data/ranking.txt");
 
-    defineRankingInicioJogo();
+    defineRankingInicioJogo(ranking, pontuacaoJogadores, 5);
 
     // Criando a câmera
     sf::View camera(sf::Vector2f(0.0f, 0.0f), sf::Vector2f(512.0f,512.0f));
@@ -485,13 +508,7 @@ int main()
     int pontuacao[N];
     int pontuacaoNova = 0;
 
-    for(int i=0; i<N; i++)
-    {
-        inimigos[i].vivo = i+1;
-        pontuacao[i] = 100*(i+1);
-        inimigos[i].xvel *= 1;
-        inimigos[i].xpos = 930 * (i+1);
-    }
+    defineInimigos(inimigos, pontuacao, N);
 
     bool enemyLeft = true;
     bool enemyRight = false;
@@ -528,7 +545,7 @@ int main()
     vector<char> listaDeLetrasAux;
     char listaDeLetras[numeroDeLetras];
     int tamanhoPalavraChave = strlen(palavraChave);
-    char palavra[tamanhoPalavraChave];
+    char palavra[tamanhoPalavraChave+1];
     char inventarioLetras[numeroDeLetras];
     int inventarioLetrasQuant[numeroDeLetras];
     palavra[0] = '\0';
@@ -626,9 +643,16 @@ int main()
     }
 
     // Cor do inimigo
+    int maxP = pontuacao[0];
+    for(int i = 1; i < N; i++)
+    {
+        if(pontuacao[i] > maxP)
+            maxP = pontuacao[i];
+    }
     for(int i = 0; i < N; i++)
     {
-        Color cor(255*i,225*(N-i), 225*i/2);
+        int val = 100 * pontuacao[i] / (float)maxP;
+        Color cor(255*val,225*(100-val), 225*val/2);
         inimigosRect[i].setFillColor(cor);
     }
 
@@ -909,8 +933,8 @@ int main()
                 app.draw(text);
                 if((Keyboard::isKeyPressed(Keyboard::S)))
                 {
-                    defineRankingFinalJogo(pontuacaoNova);
-                    novoTextoRanking();
+                    defineRankingFinalJogo(pontuacaoNova, pontuacaoJogadores, 5);
+                    novoTextoRanking(ranking, pontuacaoJogadores, 5);
                     resultadoRanking = false;
                 }
                 if((Keyboard::isKeyPressed(Keyboard::R)))
@@ -951,4 +975,5 @@ int main()
     }
     return EXIT_SUCCESS;
 }
+
 
