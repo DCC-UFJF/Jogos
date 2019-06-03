@@ -1,5 +1,5 @@
-Primeiro lugar: 000
-Segundo lugar: 000
-Terceiro lugar: 000
-Quarto lugar: 000
-Quinto lugar: 000
+1o lugar: 600
+2o lugar: 400
+3o lugar: 400
+4o lugar: 400
+5o lugar: 400

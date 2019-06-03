@@ -7,7 +7,7 @@
 #include "Animacao.h"
 
 #define PALAVRACHAVE "helloworld"
-#define N 10
+#define N 5
 
 // var
 int windowWidth = 800;
@@ -361,10 +361,11 @@ void defineRankingInicioJogo(fstream& ranking, int pontuacaoJogadores[], int tam
 {
     string str;
     int numero, contador=0;
-    while(!ranking.eof())
+    while(!ranking.eof() && contador < tamRanking)
     {
         ranking>>str;
 
+        cout << str << endl;
         if(str=="lugar:")
         {
             ranking>>numero;
@@ -468,9 +469,10 @@ void novoTextoRanking(fstream& ranking, int pontuacaoJogadores[], int tamRanking
 {
     string str;
 
-    for(int i = 0; i < tamRanking; i++)
+    str = "1o lugar: " + to_string(pontuacaoJogadores[0]);
+    for(int i = 1; i < tamRanking; i++)
     {
-        str += to_string(i+1) + "o lugar: " + to_string(pontuacaoJogadores[i]) + "\n";
+        str += "\n" + to_string(i+1) + "o lugar: " + to_string(pontuacaoJogadores[i]);
     }
 //    str =
 //        "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
