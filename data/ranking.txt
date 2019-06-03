@@ -1,5 +1,5 @@
-1o lugar: 600
-2o lugar: 400
-3o lugar: 400
-4o lugar: 400
-5o lugar: 400
+1o lugar: 0
+2o lugar: 0
+3o lugar: 0
+4o lugar: 0
+5o lugar: 0

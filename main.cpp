@@ -77,7 +77,6 @@ letraStruct;
 
 void defineInimigos(inimigo inimigos[], int pontuacao[], int tam);
 
-/// Aula 3 - Exercicio 0
 void reiniciarLevel(Player& player, inimigo inimigos[], int pontuacao[], int tam)
 {
     player.vivo = 1;
@@ -382,46 +381,26 @@ void defineRankingInicioJogo(fstream& ranking, int pontuacaoJogadores[], int tam
 /// Aula 3 - Exercício 1
 int comparar(char chave[], char teste[])
 {
-    int i;
-    for (i = 0; chave[i] != '\0' && teste[i] != '\0'; i++)
-        if (chave[i] != teste[i])
-            return 0;
-    if (chave[i] == '\0' && teste[i] == '\0')
-        return 1;
-    else
-        return 0;
+
+//implemente aqui o codigo
+
+    return 0;
 }
 
 /// Aula 3 - Exercício 2
 void atualizaInventario(char palavra[], char lista[], int quant[])
 {
-    lista[0] = '\0'; // essa linha deve ser informada aos calouros
-    int i;
-    for (i = 0; palavra[i] != '\0'; i++)
-    {
-        int j = 0;
-        while (lista[j] != '\0' && lista[j] != palavra[i])
-            j++;
-        if (lista[j] == '\0')
-        {
-            lista[j + 1] = '\0';
-            lista[j] = palavra[i];
-            quant[j] = 0;
-        }
-        quant[j]++;
-    }
+
+//implemente aqui o codigo
+
 }
 
 /// Aula 3 - Exercicio 3
 void embaralharLista(int numeroDeLetras, char listaDeLetras[], char todasAsLetras[])
 {
-    for (int i = 0; i < numeroDeLetras; i++)
-    {
-        int r = rand() % (numeroDeLetras - i);
-        listaDeLetras[i] = todasAsLetras[r];
-        for (int j = r; j < numeroDeLetras - i - 1; j++)
-            todasAsLetras[j] = todasAsLetras[j + 1];
-    }
+
+//implemente aqui o codigo
+
 }
 
 void inicializaInimigo(inimigo inimigos[], int indice, int vidas, float velocidade, int posicao)
@@ -434,34 +413,16 @@ void inicializaInimigo(inimigo inimigos[], int indice, int vidas, float velocida
 /// Aula 3 - Exercicio 4
 void defineInimigos(inimigo inimigos[], int pontuacao[], int tam)
 {
-    int vidas;          // número de vidas do inimigo
-    float velocidade;   // velocidade do inimigo
-    int posicao;        // posição inicial do inimigo (entre 0 e 1940)
 
-    for(int i=0; i<tam; i++)
-    {
-        vidas = i+1;
-        int r = rand() % 2;
-        pontuacao[i] = 100 + r*100;
-        velocidade = -3 - r*2;
-        posicao = 930 * (i+1);
-        inicializaInimigo(inimigos, i, vidas, velocidade, posicao);
-    }
+//implemente aqui o codigo
+
 }
 
 /// Aula 3 - Exercicio 5
 void defineRankingFinalJogo(int pontuacaoNova, int pontuacaoJogadores[], int tamRanking)
 {
-    int aux;
-    for(int i = 0; i<tamRanking; i++)
-    {
-        if(pontuacaoNova > pontuacaoJogadores[i])
-        {
-            aux = pontuacaoJogadores[i];
-            pontuacaoJogadores[i] = pontuacaoNova;
-            pontuacaoNova = aux;
-        }
-    }
+
+//implemente aqui o codigo
 
 }
 
@@ -474,12 +435,6 @@ void novoTextoRanking(fstream& ranking, int pontuacaoJogadores[], int tamRanking
     {
         str += "\n" + to_string(i+1) + "o lugar: " + to_string(pontuacaoJogadores[i]);
     }
-//    str =
-//        "Primeiro lugar: " + to_string(pontuacaoJogadores[0])
-//        +"\nSegundo lugar: " +  to_string(pontuacaoJogadores[1])
-//        +"\nTerceiro lugar: " + to_string(pontuacaoJogadores[2])
-//        +"\nQuarto lugar: " +  to_string(pontuacaoJogadores[3])
-//        +"\nQuinto lugar: " + to_string(pontuacaoJogadores[4]);
 
     ranking.close();
     ranking.open("data/ranking.txt");
