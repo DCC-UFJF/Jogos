@@ -17,8 +17,18 @@ typedef struct Ponto
     int y;
 };
 
+typedef struct Retangulo
+{
+    Ponto p1;
+    Ponto p2;
+};
+
+Retangulo criaRetangulo(Ponto p1, Ponto p2);
+Retangulo moveRetangulo(Retangulo r, int dx, int dy);
+
 typedef struct Bloco
 {
+    Retangulo r;
     int x;
     int y;
     int ativo = 1;
@@ -88,12 +98,14 @@ Tabuleiro criaTabuleiro(int largura, int altura, int borda)
     return tab;
 }
 
-/// EXERCICIO 2
 int podeMoverPara(Tabuleiro tab, int x, int y)
 {
-    /// Implemente aqui sua solução
-
-    return 0;
+    if((x < tab.borda) || (x >= tab.largura+tab.borda) || (y >= tab.altura))
+        return 0;
+    else if(tab.grade[x][y].ativo)
+        return 0;
+    else
+        return 1;
 }
 
 Tabuleiro adicionaAoTabuleiro(Tabuleiro tab, Tetramino t)
@@ -105,33 +117,81 @@ Tabuleiro adicionaAoTabuleiro(Tabuleiro tab, Tetramino t)
     return tab;
 }
 
-/// EXERCICIO 4
 Tabuleiro deletaLinha(Tabuleiro tab, int y)
 {
-    /// Implemente aqui sua solução
+    int x;
+    for(x = 0; x < tab.largura; x++)
+    {
+        tab.grade[x][y].x = -1;
+        tab.grade[x][y].y = -1;
+        tab.grade[x][y].ativo = 0;
+    }
 
     return tab;
 }
 
 int linhaCompleta(Tabuleiro tab, int y)
 {
-    /// Implemente aqui sua solução
-
-    return 0;
+    int x;
+    for(x = 0; x < tab.largura; x++)
+    {
+        if(!tab.grade[x][y].ativo)
+            return 0;
+    }
+    return 1;
 }
 
 Tabuleiro desceLinhas(Tabuleiro tab, int yInicial)
 {
-    /// Implemente aqui sua solução
-
+    int x, y;
+    for(y = yInicial; y >= 0; y--)
+    {
+        for(x = 0; x < tab.largura; x++)
+        {
+            if(tab.grade[x][y].ativo)
+            {
+                Bloco b = tab.grade[x][y];
+                tab.grade[x][y].ativo = 0;
+                b = moveBloco(b, 0, 1);
+                tab.grade[x][y+1] = b;
+            }
+        }
+    }
     return tab;
 }
 
 Tabuleiro removeLinhasCompletas(Tabuleiro tab)
 {
-    /// Implemente aqui sua solução
+    int y;
+
+    for(y = 0; y < tab.altura; y++)
+    {
+        if(linhaCompleta(tab, y))
+        {
+            tab = deletaLinha(tab, y);
+            tab = desceLinhas(tab, y-1);
+        }
+    }
 
     return tab;
+}
+
+Retangulo criaRetangulo(Ponto p1, Ponto p2)
+{
+    Retangulo r;
+    r.p1 = p1;
+    r.p2 = p2;
+    return r;
+}
+
+Retangulo moveRetangulo(Retangulo r, int dx, int dy)
+{
+    r.p1.x += dx;
+    r.p1.y += dy;
+    r.p2.x += dx;
+    r.p2.y += dy;
+
+    return r;
 }
 
 Bloco criaBloco(Ponto p, sf::Color cor)
@@ -146,6 +206,10 @@ Bloco criaBloco(Ponto p, sf::Color cor)
     p2.x = (p1.x + TAMANHO_BLOCO);
     p2.y = (p1.y + TAMANHO_BLOCO);
 
+//    printf("P1: (%d, %d)\n", p1.x, p1.y);
+//    printf("P2: (%d, %d)\n", p2.x, p2.y);
+
+    b.r = criaRetangulo(p1,p2);
     b.shape.setPosition(p.x*TAMANHO_BLOCO, p.y*TAMANHO_BLOCO);
     b.shape.setSize(sf::Vector2f(p2.x - p1.x, p2.y - p1.y));
     b.shape.setFillColor(cor);
@@ -168,6 +232,9 @@ Bloco moveBloco(Bloco b, int dx, int dy)
     b.x += dx;
     b.y += dy;
 
+//    printf("MOVE: (%d, %d)\n", b.x, b.y);
+
+    b.r = moveRetangulo(b.r, dx * TAMANHO_BLOCO, dy * TAMANHO_BLOCO);
     b.shape.move(dx * TAMANHO_BLOCO, dy * TAMANHO_BLOCO);
     return b;
 }
@@ -330,11 +397,11 @@ Tetramino criaTetramino(Ponto centro, int tipo)
     return t;
 }
 
-/// EXERCICIO 1
 Tetramino moveTetramino(Tetramino t, int dx, int dy)
 {
-    /// Implemente aqui sua solução
-
+    int i;
+    for(i = 0; i < 4; i++)
+        t.blocos[i] = moveBloco(t.blocos[i], dx, dy);
     return t;
 }
 
@@ -369,18 +436,37 @@ int podeRotacionarTetramino(Tetramino t, Tabuleiro tab)
     return 1;
 }
 
-/// EXERCICIO 3
 Tetramino rotacionaTetramino(Tetramino t, Tabuleiro tab)
 {
-    /// Implemente aqui sua solução
+    int i;
+    int x, y;
+    Bloco centro = t.blocos[1];
+
+    for(i = 0; i < 4; i++)
+    {
+        if(i != 1)
+        {
+            x = centro.x - t.dir_rotacao*centro.y + t.dir_rotacao*t.blocos[i].y;
+            y = centro.y + t.dir_rotacao*centro.x - t.dir_rotacao*t.blocos[i].x;
+
+            t.blocos[i] = moveBloco(t.blocos[i], x - t.blocos[i].x, y - t.blocos[i].y);
+        }
+    }
+
+    if(t.muda_rotacao)
+        t.dir_rotacao *= -1;
 
     return t;
 }
 
-/// EXERCICIO 5
 void gameOver(Tabuleiro b)
 {
-    /// Implemente aqui sua solução
+printf("Game Over");
+}
+
+void pause(Tabuleiro b)
+{
+
 }
 
 Tetramino criaNovoTetramino(Tabuleiro tab)
@@ -392,6 +478,19 @@ Tetramino criaNovoTetramino(Tabuleiro tab)
     centro.y = 0;
 
     return criaTetramino(centro, tipo);
+}
+
+Tetramino anima(Tabuleiro tab, Tetramino t, int dx, int dy)
+{
+//    if(podeMover(tab, t, dx, dy))
+//    {
+//        t = moveTetramino(t, dx, dy);
+//    }
+//    else if(dy == 1)
+//    {
+//        tab = adicionaAoTabuleiro(tab, t);
+//    }
+//    return t;
 }
 
 void desenhaBloco(sf::RenderWindow& window, Bloco b)
