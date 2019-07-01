@@ -4,9 +4,9 @@
 
 #define LARGURA_TABULEIRO 10
 #define ALTURA_TABULEIRO 20
-#define BORDA_TABULEIRO 2
+#define BORDA_TABULEIRO 0
 #define TAMANHO_BLOCO 30
-#define BORDA_BLOCO 0
+#define BORDA_BLOCO 3
 
 using namespace sf;
 
@@ -31,6 +31,7 @@ typedef struct Bloco
     Retangulo r;
     int x;
     int y;
+    int ativo = 1;
     sf::RectangleShape shape;
 };
 
@@ -75,7 +76,7 @@ Tabuleiro adicionaAoTabuleiro(Tabuleiro tab, Tetramino t);
 Tabuleiro deletaLinha(Tabuleiro tab, int y);
 int linhaCompleta(Tabuleiro tab, int y);
 Tabuleiro desceLinhas(Tabuleiro tab, int yInicial);
-int removeLinhasCompletas(Tabuleiro tab);
+Tabuleiro removeLinhasCompletas(Tabuleiro tab);
 
 Tabuleiro criaTabuleiro(int largura, int altura, int borda)
 {
@@ -91,6 +92,7 @@ Tabuleiro criaTabuleiro(int largura, int altura, int borda)
         {
             tab.grade[i][j].x = -1;
             tab.grade[i][j].y = -1;
+            tab.grade[i][j].ativo = 0;
         }
     }
     return tab;
@@ -100,7 +102,7 @@ int podeMoverPara(Tabuleiro tab, int x, int y)
 {
     if((x < tab.borda) || (x >= tab.largura+tab.borda) || (y >= tab.altura))
         return 0;
-    else if(tab.grade[x][y].x != -1)
+    else if(tab.grade[x][y].ativo)
         return 0;
     else
         return 1;
@@ -122,6 +124,7 @@ Tabuleiro deletaLinha(Tabuleiro tab, int y)
     {
         tab.grade[x][y].x = -1;
         tab.grade[x][y].y = -1;
+        tab.grade[x][y].ativo = 0;
     }
 
     return tab;
@@ -132,7 +135,7 @@ int linhaCompleta(Tabuleiro tab, int y)
     int x;
     for(x = 0; x < tab.largura; x++)
     {
-        if(tab.grade[x][y].x == -1)
+        if(!tab.grade[x][y].ativo)
             return 0;
     }
     return 1;
@@ -141,25 +144,25 @@ int linhaCompleta(Tabuleiro tab, int y)
 Tabuleiro desceLinhas(Tabuleiro tab, int yInicial)
 {
     int x, y;
-    for(y = yInicial; y < tab.altura; y++)
+    for(y = yInicial; y >= 0; y--)
     {
         for(x = 0; x < tab.largura; x++)
         {
-            if(tab.grade[x][y].x != -1)
+            if(tab.grade[x][y].ativo)
             {
                 Bloco b = tab.grade[x][y];
+                tab.grade[x][y].ativo = 0;
                 b = moveBloco(b, 0, 1);
-                tab.grade[x][y] = b;
+                tab.grade[x][y+1] = b;
             }
         }
     }
     return tab;
 }
 
-int removeLinhasCompletas(Tabuleiro tab)
+Tabuleiro removeLinhasCompletas(Tabuleiro tab)
 {
     int y;
-    int deletadas = 0;
 
     for(y = 0; y < tab.altura; y++)
     {
@@ -167,11 +170,10 @@ int removeLinhasCompletas(Tabuleiro tab)
         {
             tab = deletaLinha(tab, y);
             tab = desceLinhas(tab, y-1);
-            deletadas++;
         }
     }
 
-    return deletadas;
+    return tab;
 }
 
 Retangulo criaRetangulo(Ponto p1, Ponto p2)
@@ -209,8 +211,10 @@ Bloco criaBloco(Ponto p, sf::Color cor)
 
     b.r = criaRetangulo(p1,p2);
     b.shape.setPosition(p.x*TAMANHO_BLOCO, p.y*TAMANHO_BLOCO);
-    b.shape.setSize(sf::Vector2f(p2.x - p1.x, p1.y - p2.y));
+    b.shape.setSize(sf::Vector2f(p2.x - p1.x, p2.y - p1.y));
     b.shape.setFillColor(cor);
+
+    b.ativo = 1;
 
     return b;
 }
@@ -471,8 +475,8 @@ Tetramino criaNovoTetramino(Tabuleiro tab)
 
     Ponto centro;
     centro.x = tab.largura / 2;
-    centro.y = 10;
-//    printf("CENTRO: (%d, %d)\n", centro.x, centro.y);
+    centro.y = 0;
+
     return criaTetramino(centro, tipo);
 }
 
@@ -508,7 +512,7 @@ void desenhaTabuleiro(sf::RenderWindow& window, Tabuleiro tab)
     {
         for(y = 0; y < tab.altura; y++)
         {
-            if(tab.grade[x][y].x != -1)
+            if(tab.grade[x][y].ativo)
                 desenhaBloco(window, tab.grade[x][y]);
         }
     }
@@ -530,8 +534,10 @@ int main()
     proximoTetramino = criaNovoTetramino(tab);
 
     // Create the main window
-    RenderWindow window(sf::VideoMode(400, 600), "Tetris!");
-
+    //RenderWindow window(sf::VideoMode(400, 600), "Tetris!");
+    RenderWindow window(sf::VideoMode( (LARGURA_TABULEIRO + BORDA_TABULEIRO*2) * TAMANHO_BLOCO,
+                                       (ALTURA_TABULEIRO  + BORDA_TABULEIRO*2) * TAMANHO_BLOCO), "Tetris!");
+    window.setFramerateLimit(15);
 
     // Start the game loop
     while (window.isOpen())
@@ -556,7 +562,7 @@ int main()
             tetraminoAtual = rotacionaTetramino(tetraminoAtual, tab);
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
         {
-            while(podeMoverTetramino(tetraminoAtual, tab, dx, dy))
+            while(podeMoverTetramino(tetraminoAtual, tab, 0, 1))
                 tetraminoAtual = moveTetramino(tetraminoAtual, 0, 1);
         }
 
@@ -574,7 +580,7 @@ int main()
             proximoTetramino = criaNovoTetramino(tab);
             //if(not drawShape)
 
-            nlinhas = removeLinhasCompletas(tab);
+            tab = removeLinhasCompletas(tab);
         }
 
         // Clear screen
@@ -582,7 +588,7 @@ int main()
 
         desenhaTetramino(window, tetraminoAtual);
         desenhaTabuleiro(window, tab);
-        window.setFramerateLimit(15);
+
         window.display();
     }
     return EXIT_SUCCESS;
