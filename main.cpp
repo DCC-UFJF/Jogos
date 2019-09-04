@@ -128,50 +128,21 @@ void atualizaVelocidadeY(Player& p, float yvel)
 /// EXERCÍCIO 3
 void pular(Player& p, float deltaTime)
 {
-    float yvel, ypos;
-
-    float impulso = 0;
-    float gravidade = 700;
-
-    yvel = obtemVelocidadeY(p);
-    ypos = obtemPosicaoY(p);
-
-    impulso = obtemImpulso(p);
-
-    yvel = yvel + (impulso + gravidade) * deltaTime;
-    ypos = ypos + yvel * deltaTime;
-
-    atualizaVelocidadeY(p, yvel);
-    atualizaPosicaoY(p, ypos);
+    /// IMPLEMENTE AQUI SUA SOLUÇÃO
 }
 
 /// EXERCÍCIO 1
 float deslocamentoLateral(Player p, float deltaTime)
 {
-    ///Implemente aqui o codigo
-    float velocidade = 50;
-    return velocidade * deltaTime * sentidoMovimento(p);
+    /// IMPLEMENTE AQUI SUA SOLUÇÃO
+    /// Se necessário, pode mudar o valor de retorno
+    return 0;
 }
 
 /// EXERCÍCIO 2
 void calculaMovimentos(Player& p, float deltaTime)
 {
-    float xvel, xpos;
-
-    xpos = obtemPosicaoX(p);
-
-	xvel = deslocamentoLateral(p, deltaTime);
-	xpos += xvel;
-
-	float pi = 3.1415;
-	float xsin = xpos * pi/180.0;
-	float y = sin(xsin/2);
-	cout << y << endl;
-	atualizaPosicaoX(p, xpos);
-	atualizaPosicaoY(p, y * 512);
-	atualizaVelocidadeX(p, xvel);
-
-	pular(p, deltaTime);
+    /// IMPLEMENTE AQUI SUA SOLUÇÃO
 }
 
 Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
