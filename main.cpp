@@ -30,7 +30,7 @@ typedef struct
 }
 Player;
 
-int getSentido(Player p)
+int sentidoMovimento(Player p)
 {
 	int sentido;
 	if(Keyboard::isKeyPressed(Keyboard::Right))
@@ -58,33 +58,124 @@ int getSentido(Player p)
 	return sentido;
 }
 
-/// Aula 1 exercício 1:
-float movimentoLateral(float aceleracao,Player p)
+float obtemImpulso(Player& p)
 {
-    ///Implemente aqui o codigo
-    return 0;
+    if(Keyboard::isKeyPressed(Keyboard::Up) && p.canJump)
+    {
+        p.canJump = false;
+        return -20000;
+    }
+    else
+        return 0;
 }
 
-
-
-/// Aula 1 exercício 2:
-float calculaVelocidadePulo(float v0, float impulso, float gravidade, float delta_t)
+void obtemDadosJogador(Player& p, float& xpos, float& xvel, float& ypos, float& yvel)
 {
-    ///Implemente aqui o codigo
-	return 0;
+    xpos = p.xpos;
+    ypos = p.ypos;
+    xvel = p.xvel;
+    yvel = p.yvel;
 }
 
-float calculaPosicaoPulo(float y0, float v, float delta_t)
+float obtemPosicaoX(Player& p)
+{
+    return p.xpos;
+}
+
+float obtemPosicaoY(Player& p)
+{
+    return p.ypos;
+}
+
+float obtemVelocidadeX(Player& p)
+{
+    return p.xvel;
+}
+
+float obtemVelocidadeY(Player& p)
+{
+    return p.yvel;
+}
+
+void atualizaJogador(Player& p, float xpos, float xvel, float ypos, float yvel)
+{
+    p.xpos = xpos;
+    p.xvel = xvel;
+    p.ypos = ypos;
+    p.yvel = yvel;
+}
+
+void atualizaPosicaoX(Player& p, float xpos)
+{
+    p.xpos = xpos;
+}
+
+void atualizaPosicaoY(Player& p, float ypos)
+{
+    p.ypos = ypos;
+}
+
+void atualizaVelocidadeX(Player& p, float xvel)
+{
+    p.xvel = xvel;
+}
+
+void atualizaVelocidadeY(Player& p, float yvel)
+{
+    p.yvel = yvel;
+}
+
+/// EXERCÍCIO 3
+void pular(Player& p, float deltaTime)
+{
+    float yvel, ypos;
+
+    float impulso = 0;
+    float gravidade = 700;
+
+    yvel = obtemVelocidadeY(p);
+    ypos = obtemPosicaoY(p);
+
+    impulso = obtemImpulso(p);
+
+    yvel = yvel + (impulso + gravidade) * deltaTime;
+    ypos = ypos + yvel * deltaTime;
+
+    atualizaVelocidadeY(p, yvel);
+    atualizaPosicaoY(p, ypos);
+}
+
+/// EXERCÍCIO 1
+float deslocamentoLateral(Player p, float deltaTime)
 {
     ///Implemente aqui o codigo
-    return 400;
+    float velocidade = 50;
+    return velocidade * deltaTime * sentidoMovimento(p);
+}
+
+/// EXERCÍCIO 2
+void calculaMovimentos(Player& p, float deltaTime)
+{
+    float xvel, xpos;
+
+    xpos = obtemPosicaoX(p);
+
+	xvel = deslocamentoLateral(p, deltaTime);
+	xpos += xvel;
+
+	float pi = 3.1415;
+	float xsin = xpos * pi/180.0;
+	float y = sin(xsin/2);
+	cout << y << endl;
+	atualizaPosicaoX(p, xpos);
+	atualizaPosicaoY(p, y * 512);
+	atualizaVelocidadeX(p, xvel);
+
+	pular(p, deltaTime);
 }
 
 Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,float deltaTime)
 {
-    float impulso = 0;
-    float gravidade = 700;
-	p.xvel = 2;
 	if(playerRight)
 	{
 		p.faceRight = true;
@@ -100,8 +191,6 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 	if((playerUp) && (p.canJump))
 	{
 		p.onGround = false;
-		p.canJump = false;
-		impulso = -20000;
 		p.row = 2;
 	}
 
@@ -110,10 +199,7 @@ Player playerUpdate(Player p,bool playerUp,bool playerLeft,bool playerRight,floa
 		p.row = 0;
 	}
 
-	p.xvel = movimentoLateral(p.xvel,p);
-	p.xpos += p.xvel;
-	p.yvel = calculaVelocidadePulo(p.yvel, impulso, gravidade, deltaTime);
-	p.ypos = calculaPosicaoPulo(p.ypos, p.yvel, deltaTime);
+	calculaMovimentos(p, deltaTime);
 
 	 if(p.ypos >= 400)
 	{
